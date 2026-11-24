@@ -131,7 +131,8 @@ func _on_session_event(session_id: String, kind: String, data: Dictionary) -> vo
 				_queues[session_id].tool_ended(String(data.get("tool", "")))
 		"turn_end":
 			var turn_ms: int = Time.get_ticks_msec() - s.turn_started_msec if s.turn_started_msec > 0 else -1
-			_notify(session_id, Policy.for_turn_end(s.name, turn_ms, Settings.notify_done, Settings.messages))
+			_notify(session_id, Policy.for_turn_end(s.name, turn_ms, Settings.notify_done, Settings.messages,
+				SessionRegistry.running_in_background(data)))
 		"turn_error":
 			_notify(session_id, Policy.for_turn_error(s.name, String(data.get("error", "")),
 				Settings.notify_errors, Settings.messages))

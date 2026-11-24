@@ -55,6 +55,39 @@ func test_out_of_order_events_are_ignored() -> void:
 	assert_eq(reg.get_session("s1").state, &"ended")
 
 
+func test_turn_end_with_background_work_stays_working() -> void:
+	reg.apply_event(CC, "prompt", {}, 1, 100)
+	reg.apply_event(CC, "tool_start", {"tool": "Bash"}, 2, 110)
+	reg.apply_event(CC, "tool_end", {"tool": "Bash"}, 3, 120)
+	assert_true(reg.apply_event(CC, "turn_end", {"background": 1}, 4, 130))
+	assert_eq(reg.get_session("s1").state, &"working", "waits for a background command")
+	assert_eq(reg.get_session("s1").tool, "")
+	# Woken up when the command ends.
+	reg.apply_event(CC, "tool_start", {"tool": "Read"}, 5, 140)
+	assert_eq(reg.get_session("s1").state, &"working")
+	reg.apply_event(CC, "tool_end", {"tool": "Read"}, 6, 150)
+	assert_eq(reg.get_session("s1").state, &"thinking")
+	reg.apply_event(CC, "turn_end", {}, 7, 160)
+	assert_eq(reg.get_session("s1").state, &"done")
+
+
+func test_background_count_is_read_defensively() -> void:
+	assert_eq(SessionRegistry.running_in_background({}), 0)
+	assert_eq(SessionRegistry.running_in_background({"background": 2.0}), 2, "JSON numbers are floats")
+	assert_eq(SessionRegistry.running_in_background({"background": "2"}), 0)
+	reg.apply_event(CC, "turn_end", {"background": 0}, 1, 100)
+	assert_eq(reg.get_session("s1").state, &"done")
+
+
+func test_background_turn_end_while_a_request_is_open() -> void:
+	reg.apply_event(CC, "tool_start", {"tool": "Bash"}, 1, 100)
+	reg.add_request(SessionRegistry.Request.new("r1", "s1", "question", "", [], false, 7), 110)
+	reg.apply_event(CC, "turn_end", {"background": 1}, 2, 120)
+	assert_eq(reg.get_session("s1").state, &"waiting", "the open request wins")
+	reg.remove_request("r1")
+	assert_eq(reg.get_session("s1").state, &"working", "then back to working")
+
+
 func test_request_waits_and_restores_state() -> void:
 	reg.apply_event(CC, "tool_start", {"tool": "Bash"}, 1, 100)
 	assert_true(reg.add_request(SessionRegistry.Request.new("r1", "s1", "question", "", [], false, 7), 110))

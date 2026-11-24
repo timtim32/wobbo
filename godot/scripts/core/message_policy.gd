@@ -65,8 +65,11 @@ static func for_message(text: String, session_name: String, mode: String) -> Dic
 
 
 ## `turn_ms` is the time since the prompt, or a negative number when unknown.
-static func for_turn_end(session_name: String, turn_ms: int, notify_done: bool, mode: String) -> Dictionary:
-	if not notify_done or turn_ms < DONE_AFTER_MS:
+## `background` is how many background commands still run: then it is not done
+## yet (background-work D3).
+static func for_turn_end(session_name: String, turn_ms: int, notify_done: bool, mode: String,
+		background := 0) -> Dictionary:
+	if not notify_done or turn_ms < DONE_AFTER_MS or background > 0:
 		return {}
 	return _plan(mode, KIND_DONE, "Done", "%s is done" % session_name, DONE_SEC)
 

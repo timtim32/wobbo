@@ -52,6 +52,11 @@ func test_turn_finished_after_twenty_seconds() -> void:
 	assert_eq(Policy.for_turn_end("api", 60000, true, "off"), {}, "output off")
 
 
+func test_no_done_while_background_commands_run() -> void:
+	assert_eq(Policy.for_turn_end("api", 180000, true, "balloons", 1), {}, "still waits for a background command")
+	assert_eq(Policy.for_turn_end("api", 480000, true, "balloons", 0).text, "Done", "woken up and finished")
+
+
 func test_error_notice() -> void:
 	var p := Policy.for_turn_error("api", "API overloaded\nretry later", true, "balloons")
 	assert_eq([p.text, p.duration_s, p.kind], ["Something went wrong: API overloaded", 8.0, &"error"])
