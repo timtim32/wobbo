@@ -62,7 +62,7 @@ func content_for(session_id: String, now_msec: int) -> Dictionary:
 	if current.get("type") == &"request":
 		var request: Dictionary = Bridge.registry.requests.get(current.id, {})
 		if request.is_empty():
-			q.remove_request(current.id) # withdrawn without a signal we saw
+			q.remove_request(current.id) # already gone before its balloon came up
 			return content_for(session_id, now_msec)
 		current["request"] = request
 	return current

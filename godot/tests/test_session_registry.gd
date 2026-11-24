@@ -84,6 +84,17 @@ func test_ended_session_is_removed_after_linger() -> void:
 	assert_false(reg.has_session("s1"))
 
 
+func test_requests_of_a_removed_session_are_reported() -> void:
+	reg.apply_event(CC, "prompt", {}, 1, 100)
+	reg.add_request({"id": "r1", "session_id": "s1", "owner": 7}, 110)
+	reg.apply_event(CC, "session_end", {"reason": "other"}, 2, 1000)
+	var dropped: Array[Dictionary] = []
+	assert_eq(reg.tick(1000 + 5000, dropped), ["s1"] as Array[String])
+	assert_eq(dropped.size(), 1, "one request dropped")
+	assert_eq(dropped[0].get("id"), "r1")
+	assert_true(reg.requests.is_empty())
+
+
 func test_silent_session_is_removed_after_30_minutes() -> void:
 	reg.apply_event(CC, "prompt", {}, 1, 0)
 	assert_eq(reg.tick(29 * 60 * 1000), [] as Array[String])

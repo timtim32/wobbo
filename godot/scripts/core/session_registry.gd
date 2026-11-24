@@ -253,8 +253,9 @@ static func pretty_client_name(client_name: String) -> String:
 	return client_name
 
 
-## Removes sessions that ended a while ago or went silent. Returns their ids.
-func tick(now_msec: int) -> Array[String]:
+## Removes sessions that ended a while ago or went silent. Returns their ids;
+## the open requests of those sessions are appended to `dropped_requests`.
+func tick(now_msec: int, dropped_requests: Array[Dictionary] = []) -> Array[String]:
 	var removed: Array[String] = []
 	for id: String in _sessions.keys():
 		var s: Session = _sessions[id]
@@ -263,7 +264,7 @@ func tick(now_msec: int) -> Array[String]:
 			and now_msec - s.updated_msec >= IDLE_TIMEOUT_MS
 		if gone or silent:
 			for request_id in s.pending.duplicate():
-				remove_request(request_id)
+				dropped_requests.append(remove_request(request_id))
 			_sessions.erase(id)
 			removed.append(id)
 	return removed

@@ -106,7 +106,11 @@ func _process(delta: float) -> void:
 	_tick_left -= delta
 	if _tick_left <= 0.0:
 		_tick_left = TICK_SEC
-		for id in registry.tick(Time.get_ticks_msec()):
+		var dropped: Array[Dictionary] = []
+		var removed := registry.tick(Time.get_ticks_msec(), dropped)
+		for request in dropped:
+			request_removed.emit(request)
+		for id in removed:
 			session_removed.emit(id)
 
 
