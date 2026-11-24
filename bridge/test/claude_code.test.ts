@@ -2,7 +2,7 @@ import { afterEach, expect, test } from "bun:test";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { AppConnection, readAppInfo, sendOnce } from "../src/app_client";
-import { askedQuestion, describePermission, focusUrl, NEXT_STEP_TOOL, type HookContext, isBuddyTool, permissionDecision, runHook, toEvent, toolLabel } from "../src/adapters/claude_code";
+import { askedQuestion, describePermission, focusUrl, NEXT_STEP_TOOL, type HookContext, isWobboTool, permissionDecision, runHook, toEvent, toolLabel } from "../src/adapters/claude_code";
 import { type FakeApp, startFakeApp } from "./fake_app";
 
 const samples: Record<string, any> = JSON.parse(readFileSync(join(import.meta.dir, "hook_samples.json"), "utf8"));
@@ -143,14 +143,14 @@ test("MCP tools are described readably, not as JSON", () => {
   expect(describePermission({ tool_name: "mcp__x__y", tool_input: { count: 3 } }).text).toBe("x · y: count");
 });
 
-test("the buddy's own tools are not mirrored to the app", async () => {
+test("Wobbo's own tools are not mirrored to the app", async () => {
   app = startFakeApp();
   app.autoAnswer = () => ({ status: "answered", choice: "allow" });
-  expect(isBuddyTool("mcp__plugin_buddy-bridge_buddy__ask_user")).toBe(true);
-  expect(isBuddyTool("mcp__plugin_buddy-bridge_buddy__say")).toBe(true);
-  expect(isBuddyTool("mcp__plugin_wobbo_wobbo__say")).toBe(true);
-  expect(isBuddyTool("mcp__wobbo__ask_user")).toBe(true);
-  expect(isBuddyTool("mcp__github__say")).toBe(false);
+  expect(isWobboTool("mcp__plugin_buddy-bridge_buddy__ask_user")).toBe(true);
+  expect(isWobboTool("mcp__plugin_buddy-bridge_buddy__say")).toBe(true);
+  expect(isWobboTool("mcp__plugin_wobbo_wobbo__say")).toBe(true);
+  expect(isWobboTool("mcp__wobbo__ask_user")).toBe(true);
+  expect(isWobboTool("mcp__github__say")).toBe(false);
   const input = { ...samples.PermissionRequest, tool_name: "mcp__plugin_buddy-bridge_buddy__ask_user",
     tool_input: { question: "Verder?" } };
   expect(await runHook(JSON.stringify(input), ctx())).toBe("");

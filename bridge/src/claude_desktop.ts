@@ -10,7 +10,10 @@ import { chmodSync, existsSync, readFileSync, renameSync, statSync, unlinkSync, 
 import { basename, dirname, join } from "node:path";
 
 export const ENTRY_NAME = "wobbo";
-/** Binaries whose entries would run a second Wobbo server in Claude Desktop. */
+/**
+ * Binaries whose entries would run a second Wobbo server in Claude Desktop.
+ * `claude-buddy-bridge`: Claude Buddy compatibility (renamed to Wobbo on 2026-11-24, standalone-app D5): remove once no 0.1.x installs remain.
+ */
 const BRIDGE_BINARIES = ["wobbo-bridge", "claude-buddy-bridge"];
 
 export type Outcome = "added" | "updated" | "unchanged" | "removed" | "absent";

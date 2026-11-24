@@ -15,7 +15,7 @@ afterEach(() => {
 });
 
 function tempFile(content: string): string {
-  const path = join(mkdtempSync(join(tmpdir(), "buddy-")), "bridge.json");
+  const path = join(mkdtempSync(join(tmpdir(), "wobbo-")), "bridge.json");
   writeFileSync(path, content);
   return path;
 }

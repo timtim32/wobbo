@@ -30,7 +30,8 @@ const CLOSE_FLUSH_MS = 200;
 /**
  * Where the app's bridge.json may be, in order (standalone-app D8): Wobbo's data
  * folder, then the folder of the app from before the rename. WOBBO_INFO (or the
- * older CLAUDE_BUDDY_INFO) replaces both, for tests.
+ * older CLAUDE_BUDDY_INFO) replaces both, for tests. The ClaudeBuddy paths are
+ * Claude Buddy compatibility (renamed to Wobbo on 2026-11-24, standalone-app D5): remove once no 0.1.x installs remain.
  */
 export function infoPaths(env: Record<string, string | undefined> = process.env, home = homedir()): string[] {
   const override = env.WOBBO_INFO ?? env.CLAUDE_BUDDY_INFO;

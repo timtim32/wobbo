@@ -36,6 +36,7 @@ export interface HookContext {
 }
 
 export function defaultContext(): HookContext {
+  // CLAUDE_BUDDY_PERMISSION_WAIT_S: Claude Buddy compatibility (renamed to Wobbo on 2026-11-24, standalone-app D5): remove once no 0.1.x installs remain.
   const waitS = Number(process.env.WOBBO_PERMISSION_WAIT_S ?? process.env.CLAUDE_BUDDY_PERMISSION_WAIT_S ?? "20");
   return {
     ppid: process.ppid,
@@ -136,8 +137,11 @@ export function toEvent(input: HookInput): { kind: EventKind; data: Record<strin
   }
 }
 
-/** The buddy's own MCP tools, e.g. `mcp__plugin_buddy-bridge_buddy__ask_user`. */
-export function isBuddyTool(tool: string): boolean {
+/**
+ * Wobbo's own MCP tools, e.g. `mcp__plugin_wobbo_wobbo__ask_user`. `buddy` matches
+ * the old `mcp__plugin_buddy-bridge_buddy__…` names (Claude Buddy compatibility (renamed to Wobbo on 2026-11-24, standalone-app D5): remove once no 0.1.x installs remain.)
+ */
+export function isWobboTool(tool: string): boolean {
   return /^mcp__.*(buddy|wobbo)__(say|ask_user)$/.test(tool);
 }
 
@@ -233,7 +237,7 @@ async function askPermission(input: HookInput, ctx: HookContext): Promise<string
   if (ctx.permissionWaitMs <= 0) return "";
   // Asking in the app for permission to ask in the app is circular: leave the
   // Wobbo's own tools to Claude Code's prompt (or the user's allow list).
-  if (isBuddyTool(input.tool_name ?? "")) return "";
+  if (isWobboTool(input.tool_name ?? "")) return "";
   // Asking the user is the interaction itself: no app prompt to allow it (work-and-wait D1).
   if (WAITS_FOR_USER.includes(input.tool_name ?? "")) return "";
   const { text, complete } = describePermission(input);

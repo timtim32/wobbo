@@ -58,7 +58,7 @@ export function startFakeApp(token = "test-token"): FakeApp {
       },
     },
   });
-  const dir = mkdtempSync(join(tmpdir(), "buddy-"));
+  const dir = mkdtempSync(join(tmpdir(), "wobbo-"));
   const infoPath = join(dir, "bridge.json");
   writeFileSync(infoPath, JSON.stringify({ port: server.port, token, pid: process.pid, protocol: 1 }));
   return Object.assign(app, {

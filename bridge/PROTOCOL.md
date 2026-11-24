@@ -63,7 +63,7 @@ after it received the `answer` (or gives up with `cancel`).
 `focus_url` is optional: a URL that opens this session in the app that hosts
 the agent, for example `claude://code/continue?session=local_…` for a Claude
 Code session in the Claude app. The app only opens it when it knows the URL's
-scheme (currently `claude`), when the user clicks the buddy of a waiting
+scheme (currently `claude`), when the user clicks the Wobbo of a waiting
 session.
 
 Hook clients always send `session`. MCP clients may omit it; the app then

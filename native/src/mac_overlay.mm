@@ -28,7 +28,7 @@ static const NSWindowCollectionBehavior OVERLAY_BEHAVIOR =
 		NSWindowCollectionBehaviorFullScreenAuxiliary |
 		NSWindowCollectionBehaviorIgnoresCycle;
 
-// Above normal and floating windows, so the buddies stay on top (overlay-window spike S3).
+// Above normal and floating windows, so the Wobbos stay on top (overlay-window spike S3).
 static const NSWindowLevel OVERLAY_LEVEL = NSStatusWindowLevel;
 
 void MacOverlay::_bind_methods() {
@@ -227,7 +227,6 @@ void MacOverlay::forget_dock_list() {
 		CFRelease((AXUIElementRef)dock_list);
 		dock_list = nullptr;
 	}
-	dock_pid = 0;
 }
 
 static AXUIElementRef find_dock_list(pid_t pid) {
@@ -266,7 +265,6 @@ Rect2 MacOverlay::get_dock_frame() {
 			return Rect2();
 		}
 		dock_list = (void *)find_dock_list(dock.processIdentifier);
-		dock_pid = dock.processIdentifier;
 		if (!dock_list) {
 			return Rect2();
 		}
@@ -344,8 +342,8 @@ Dictionary MacOverlay::find_app_of(int64_t pid) const {
 	Dictionary d;
 	NSRunningApplication *app = app_of((pid_t)pid);
 	if (app) {
-		d["name"] = String(app.localizedName.UTF8String ?: "");
-		d["bundle_id"] = String(app.bundleIdentifier.UTF8String ?: "");
+		d["name"] = String::utf8(app.localizedName.UTF8String ?: "");
+		d["bundle_id"] = String::utf8(app.bundleIdentifier.UTF8String ?: "");
 		d["pid"] = (int64_t)app.processIdentifier;
 	}
 	return d;
@@ -375,5 +373,5 @@ String MacOverlay::activate_app_of(int64_t pid) {
 		config.activates = YES;
 		[[NSWorkspace sharedWorkspace] openApplicationAtURL:url configuration:config completionHandler:nil];
 	}
-	return String(app.localizedName.UTF8String ?: "");
+	return String::utf8(app.localizedName.UTF8String ?: "");
 }

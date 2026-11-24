@@ -68,7 +68,7 @@ public:
 	// The macOS app that runs process `pid` (go-to-session D1): walks the parent
 	// processes to the first regular app. {name, bundle_id, pid} or {} if none.
 	// Not called by the app: for checking from game_eval which app a click on a
-	// buddy would bring to the front.
+	// Wobbo would bring to the front.
 	Dictionary find_app_of(int64_t pid) const;
 	// Brings that app to the front like a Dock click (go-to-session D2): unhide,
 	// activate and reopen through LaunchServices. Returns its name, or "".
@@ -98,7 +98,6 @@ public:
 
 private:
 	void *dock_list = nullptr; // AXUIElementRef of the Dock's AXList, retained
-	int64_t dock_pid = 0;
 	void forget_dock_list();
 };
 
