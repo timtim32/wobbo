@@ -1,7 +1,7 @@
 // Bridge protocol, version 1 (see ../PROTOCOL.md).
 
 export const PROTOCOL_VERSION = 1;
-export const BRIDGE_VERSION = "0.2.4";
+export const BRIDGE_VERSION = "0.2.5";
 
 export type Role = "hook" | "mcp";
 
