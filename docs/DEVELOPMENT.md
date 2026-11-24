@@ -178,15 +178,25 @@ What a Wobbo does shows what its session is doing:
 
 ## Tests
 
-Pure logic (settings, region hit-testing, focus counting) has headless tests:
+The app's logic has headless tests. After a fresh clone, import the project
+once, so Godot knows the scripts' class names (opening it in the editor does
+the same):
+
+```bash
+/Applications/Godot.app/Contents/MacOS/Godot --headless --path godot --import
+```
+
+Then run the tests:
 
 ```bash
 /Applications/Godot.app/Contents/MacOS/Godot --headless --path godot --script res://tests/run_tests.gd
 ```
 
 The runner runs every `test_*` method in `godot/tests/test_*.gd` and exits 0 when
-all pass, 1 otherwise. Window and macOS behaviour is checked by hand (see
-`openspec/changes/archive/2026-11-23-overlay-window/tasks.md`).
+all pass, 1 otherwise. A test fails when an assertion fails, when its body hits a
+script error, or when it uses `await`: tests are synchronous. Without the import
+the runner says so and exits 1. Window and macOS behaviour is checked by hand
+(see `openspec/changes/archive/2026-11-23-overlay-window/tasks.md`).
 
 ## Character art
 

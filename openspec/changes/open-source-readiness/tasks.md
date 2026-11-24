@@ -22,10 +22,10 @@ Commands used below:
 
 ## 3. Trustworthy tests (H2, H3)
 
-- [ ] 3.1 Add a temporary test that calls a missing method. Confirm that the current runner prints `ok` for it. Verify: the output shows the false pass.
-- [ ] 3.2 Add an error-counting `Logger` to `run_tests.gd`, and fail a test whose count went up or that returns a coroutine (design D3). Remove the temporary test. Verify: with the temporary test the run fails with "script error"; without it the Godot suite passes.
-- [ ] 3.3 Make the runner exit 1 with the import hint when `res://.godot/global_script_class_cache.cfg` is missing. Verify: on a fresh clone without import, the run prints the hint and exits 1, and after `--import` it passes.
-- [ ] 3.4 Document in `docs/DEVELOPMENT.md` ("Tests") that a fresh clone is imported once, and that tests are synchronous. Verify: following the section on a fresh clone gives `0 failed`.
+- [x] 3.1 Add a temporary test that calls a missing method. Confirm that the current runner prints `ok` for it. Verify: the output shows the false pass.
+- [x] 3.2 Add an error-counting `Logger` to `run_tests.gd`, and fail a test whose count went up or that returns a coroutine (design D3). Remove the temporary test. Verify: with the temporary test the run fails with "script error"; without it the Godot suite passes.
+- [x] 3.3 Make the runner exit 1 with the import hint when `res://.godot/global_script_class_cache.cfg` is missing. Verify: on a fresh clone without import, the run prints the hint and exits 1, and after `--import` it passes.
+- [x] 3.4 Document in `docs/DEVELOPMENT.md` ("Tests") that a fresh clone is imported once, and that tests are synchronous. Verify: following the section on a fresh clone gives `0 failed`.
 - [ ] 3.5 Manual check: the user breaks a test on purpose and sees it fail, then restores it.
 
 ## 4. Safer permission balloons (H4)
