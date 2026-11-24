@@ -1,5 +1,5 @@
 {
   "name": "wobbo",
-  "version": "0.2.5",
+  "version": "0.2.6",
   "description": "Shows your Claude Code sessions as Wobbos on your desktop: status via hooks, plus say and ask_user tools."
 }
