@@ -45,7 +45,7 @@ Commands used below:
 
 ## 6. Contributor workflow (H6)
 
-- [ ] 6.1 Add `.github/workflows/ci.yml` on a hosted macOS runner. It runs the bridge checks, downloads Godot 4.7.2 (cached), imports the project and runs the Godot suite. Verify: the workflow passes on a branch, and fails when a test is broken on purpose.
+- [x] 6.1 Add `.github/workflows/ci.yml` on a hosted macOS runner. It runs the bridge checks, downloads Godot 4.7.2 (cached), imports the project and runs the Godot suite. Verify: the workflow passes on a branch, and fails when a test is broken on purpose.
 - [x] 6.2 Make `tools/release.sh publish` require `WOBBO_RELEASE_REPO` (or derive it from `origin`), and fail instead of creating a repository (design D7). Update the example in `DEVELOPMENT.md`. Verify: `publish` without the variable in a fork exits with a clear message and creates nothing.
 - [x] 6.3 Add `*.p12`, `*.pem`, `.env`, `*.log`, `.vscode/` and `.idea/` to `.gitignore`. Verify: `git status --ignored` lists nothing new that should be tracked.
 - [ ] 6.4 Manual check: the user opens a test pull request and sees the CI check run.

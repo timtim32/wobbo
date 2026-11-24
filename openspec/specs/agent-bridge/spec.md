@@ -59,7 +59,7 @@ An `ask_user` call SHALL end with a clear result when it cannot be answered: whe
 - **THEN** the tool returns that no answer was given, and the question disappears from the app
 
 ### Requirement: Permission prompts in the app
-When installed in Claude Code, the bridge SHALL offer each permission prompt to the app, so that the user can allow or deny it there. When the user does not decide in the app within a short wait, or the app is not running, the decision SHALL be left to Claude Code's own prompt.
+When installed in Claude Code, the bridge SHALL offer each permission prompt to the app, so that the user can allow or deny it there, but only when the app can show what is being asked in full. When the description had to be cut, or the request has more than one significant argument, the bridge SHALL NOT offer it to the app. When the user does not decide in the app within a short wait, when the prompt is not offered, or when the app is not running, the decision SHALL be left to Claude Code's own prompt.
 
 #### Scenario: Allow from the app
 - **WHEN** Claude asks permission to run a command and the user chooses Allow in the app
@@ -72,6 +72,10 @@ When installed in Claude Code, the bridge SHALL offer each permission prompt to 
 #### Scenario: No decision in the app
 - **WHEN** the user does not decide in the app within the wait
 - **THEN** Claude Code shows its own permission prompt as usual
+
+#### Scenario: Request too long to show
+- **WHEN** Claude asks permission to run a command whose description is longer than the app can show
+- **THEN** the app offers no Allow or Deny for it, the session's Wobbo shows that it is waiting, and Claude Code shows its own permission prompt without waiting
 
 ### Requirement: Session identity for MCP calls
 Messages and questions sent through the MCP tools SHALL be attributed to the same session that the status reports come from, when the agent provides both. For agents that only use MCP, each MCP connection SHALL count as one session, named after the agent.
