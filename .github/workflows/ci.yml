@@ -1,0 +1,58 @@
+# Runs the bridge and Godot test suites on every push and pull request
+# (open-source-readiness 6.1). The native extension is not built: the app and
+# its tests run without it.
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  bridge:
+    name: Bridge (Bun)
+    runs-on: macos-latest
+    defaults:
+      run:
+        working-directory: bridge
+    steps:
+      - uses: actions/checkout@v7
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.4.2
+      - run: bun install --frozen-lockfile
+      - run: bun test
+      - run: bunx tsc --noEmit
+
+  godot:
+    name: Godot app
+    runs-on: macos-latest
+    env:
+      GODOT_VERSION: 4.7.2
+      GODOT: ${{ github.workspace }}/.ci/Godot.app/Contents/MacOS/Godot
+    steps:
+      - uses: actions/checkout@v7
+      - name: Cache Godot
+        id: godot-cache
+        uses: actions/cache@v6
+        with:
+          path: .ci/Godot.app
+          key: godot-${{ env.GODOT_VERSION }}-macos
+      - name: Download Godot
+        if: steps.godot-cache.outputs.cache-hit != 'true'
+        run: |
+          mkdir -p .ci
+          curl -fsSL -o .ci/godot.zip "https://github.com/godotengine/godot-builds/releases/download/${GODOT_VERSION}-stable/Godot_v${GODOT_VERSION}-stable_macos.universal.zip"
+          unzip -q .ci/godot.zip -d .ci
+          rm .ci/godot.zip
+      - name: Import the project
+        run: '"$GODOT" --headless --path godot --import'
+      - name: Run the tests
+        # Godot exits 0 when the runner script itself fails to load, so the
+        # summary line is checked as well.
+        run: |
+          "$GODOT" --headless --path godot --script res://tests/run_tests.gd 2>&1 | tee test.log
+          grep -Eq '^[0-9]+ tests, 0 failed$' test.log

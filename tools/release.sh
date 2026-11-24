@@ -9,7 +9,7 @@
 # Environment:
 #   GODOT                 Godot binary (default /Applications/Godot.app/Contents/MacOS/Godot)
 #   WOBBO_SIGN_IDENTITY   signing identity (default "Wobbo", see tools/make_signing_cert.sh)
-#   WOBBO_RELEASE_REPO    where releases go (default timtim32/wobbo, public)
+#   WOBBO_RELEASE_REPO    owner/repo where releases go (default: the GitHub repo of the origin remote)
 #   WOBBO_GH_USER         gh account to publish with, when it is not gh's active one
 set -Eeuo pipefail # -E: the ERR trap also fires inside functions
 
@@ -19,7 +19,6 @@ BUILD="$ROOT/build"
 APP="$BUILD/Wobbo.app"
 DMG="$BUILD/Wobbo.dmg"
 IDENTITY="${WOBBO_SIGN_IDENTITY:-Wobbo}"
-RELEASE_REPO="${WOBBO_RELEASE_REPO:-timtim32/wobbo}"
 PLUGIN_DIR="Contents/Resources/wobbo-plugin"
 
 say() { printf '\033[1m%s\033[0m\n' "$*"; }
@@ -145,6 +144,19 @@ install_app() {
 	say "Installed /Applications/Wobbo.app"
 }
 
+# Where releases go: WOBBO_RELEASE_REPO, or the GitHub repository of the origin
+# remote, so a fork never publishes to someone else's (open-source-readiness D7).
+release_repo() {
+	if [ -n "${WOBBO_RELEASE_REPO:-}" ]; then
+		echo "$WOBBO_RELEASE_REPO"
+		return
+	fi
+	local url
+	url="$(git -C "$ROOT" remote get-url origin 2>/dev/null)" || die "no origin remote; set WOBBO_RELEASE_REPO=owner/repo"
+	[[ "$url" =~ github\.com[:/]([^/]+/[^/]+)$ ]] || die "origin is not a GitHub repository ($url); set WOBBO_RELEASE_REPO=owner/repo"
+	echo "${BASH_REMATCH[1]%.git}"
+}
+
 publish() {
 	local version="${1:-}"
 	check_version "$version"
@@ -156,14 +168,13 @@ publish() {
 		GH_TOKEN="$(gh auth token --user "$WOBBO_GH_USER")"
 		export GH_TOKEN
 	fi
-	if ! gh repo view "$RELEASE_REPO" >/dev/null 2>&1; then
-		say "Creating the public repository $RELEASE_REPO for releases"
-		gh repo create "$RELEASE_REPO" --public --add-readme --description "Wobbo: a Wobbo on your desktop for every Claude Code session"
-	fi
+	local repo
+	repo="$(release_repo)"
+	gh repo view "$repo" >/dev/null 2>&1 || die "no access to the GitHub repository $repo; create it first, or set WOBBO_RELEASE_REPO"
 	local notes="$BUILD/release-notes.md"
 	sed "s/{{VERSION}}/$version/g" "$ROOT/tools/release-notes.md" >"$notes"
-	gh release create "v$version" "$DMG" --repo "$RELEASE_REPO" --title "Wobbo $version" --notes-file "$notes"
-	say "Published: https://github.com/$RELEASE_REPO/releases/tag/v$version"
+	gh release create "v$version" "$DMG" --repo "$repo" --title "Wobbo $version" --notes-file "$notes"
+	say "Published: https://github.com/$repo/releases/tag/v$version"
 }
 
 case "${1:-}" in

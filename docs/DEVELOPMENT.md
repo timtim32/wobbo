@@ -459,12 +459,13 @@ Try it on your own Mac (quit Wobbo first):
 tools/release.sh install
 ```
 
-Publish it as a GitHub release on `timtim32/wobbo`. The notes come from
-`tools/release-notes.md`. Set `WOBBO_GH_USER` when that account is not gh's
+Publish it as a GitHub release on the GitHub repository of your `origin`
+remote (set `WOBBO_RELEASE_REPO=owner/repo` for another one; the repository
+must exist). The notes come from `tools/release-notes.md`. Set `WOBBO_GH_USER` when that account is not gh's
 active one:
 
 ```bash
-WOBBO_GH_USER=timtim32 tools/release.sh publish 0.2.0
+WOBBO_GH_USER=<your-account> tools/release.sh publish 0.2.0
 ```
 
 To re-render the app icon after changing the monster drawing:

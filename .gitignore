@@ -34,3 +34,12 @@ node_modules/
 /.mcp.json
 /CLAUDE.md
 /AGENTS.md
+
+# Never commit signing material, secrets, logs or editor settings
+*.p12
+*.pem
+*.password
+.env
+*.log
+.vscode/
+.idea/
