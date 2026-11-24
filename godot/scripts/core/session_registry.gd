@@ -79,6 +79,12 @@ static func display_name(project_dir: String, fallback: String) -> String:
 	return base if not base.is_empty() else fallback
 
 
+## How many background commands a `turn_end` reports as still running (0 when absent).
+static func running_in_background(data: Dictionary) -> int:
+	var n: Variant = data.get("background", 0)
+	return int(n) if n is int or n is float else 0
+
+
 func get_session(id: String) -> Session:
 	return _sessions.get(id)
 
@@ -157,7 +163,9 @@ func apply_event(info: Dictionary, kind: String, data: Dictionary, ts: int, now_
 			new_state = Protocol.STATE_WAITING
 			s.tool = String(data.get("tool", ""))
 		"turn_end":
-			new_state = Protocol.STATE_DONE
+			# Still at work while it waits for a command it runs in the background
+			# (background-work D3); woken when it ends, it reports again.
+			new_state = Protocol.STATE_WORKING if running_in_background(data) > 0 else Protocol.STATE_DONE
 			s.tool = ""
 		"turn_error":
 			new_state = Protocol.STATE_ERROR

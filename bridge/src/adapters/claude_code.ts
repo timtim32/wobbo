@@ -2,6 +2,7 @@
 // Status hooks fire and forget; PermissionRequest waits for the user's choice
 // in the app and prints Claude Code's decision JSON (or nothing, so Claude Code
 // shows its own prompt).
+import { closeSync, fstatSync, openSync, readSync } from "node:fs";
 import { AppConnection, CONNECT_TIMEOUT_MS, sendOnce } from "../app_client";
 import type { ClientIdentity, ClientMessage, EventKind, SessionRef } from "../protocol";
 
@@ -18,6 +19,7 @@ export interface HookInput {
   notification_type?: string;
   source?: string;
   reason?: string;
+  transcript_path?: string;
   [key: string]: unknown;
 }
 
@@ -33,6 +35,8 @@ export interface HookContext {
   connect: (client: ClientIdentity, timeoutMs: number) => Promise<AppConnection | null>;
   /** Fire-and-forget delivery of one status event. */
   sendEvent: (client: ClientIdentity, message: ClientMessage) => Promise<boolean>;
+  /** The session's transcript (its last part, when it is long), or null. */
+  readTranscript: (path: string) => string | null;
 }
 
 export function defaultContext(): HookContext {
@@ -47,7 +51,42 @@ export function defaultContext(): HookContext {
     permissionWaitMs: (Number.isFinite(waitS) ? waitS : 20) * 1000,
     connect: (client, timeoutMs) => AppConnection.connect(client, timeoutMs),
     sendEvent: (client, message) => sendOnce(client, message),
+    readTranscript: readTail,
   };
+}
+
+/** The most of a transcript read at the end of a turn. */
+const MAX_TRANSCRIPT_BYTES = 32 * 1024 * 1024;
+
+function readTail(path: string): string | null {
+  let fd = -1;
+  try {
+    fd = openSync(path, "r");
+    const size = fstatSync(fd).size;
+    const length = Math.min(size, MAX_TRANSCRIPT_BYTES);
+    const buf = Buffer.alloc(length);
+    readSync(fd, buf, 0, length, size - length);
+    return buf.toString("utf8");
+  } catch {
+    return null;
+  } finally {
+    if (fd >= 0) closeSync(fd);
+  }
+}
+
+/**
+ * The ids of background commands that still run, read from a Claude Code
+ * transcript: a Bash call with `run_in_background` records `"backgroundTaskId"`,
+ * and Claude Code adds a `<task-notification>` with that id and a status when it
+ * ends. Not a public API, so read defensively: when in doubt, nothing runs.
+ */
+export function runningBackgroundTasks(transcript: string): string[] {
+  const started = new Set<string>();
+  for (const m of transcript.matchAll(/"backgroundTaskId":"([\w-]+)"/g)) started.add(m[1]);
+  for (const m of transcript.matchAll(/<task-id>([\w-]+)<\/task-id>.{0,2000}?<status>(\w+)<\/status>/g)) {
+    if (m[2] !== "running") started.delete(m[1]);
+  }
+  return [...started];
 }
 
 /** Tools with which Claude waits for the user (work-and-wait D1). */
@@ -226,6 +265,12 @@ export async function runHook(stdin: string, ctx: HookContext = defaultContext()
     if (input.hook_event_name === "PermissionRequest") return await askPermission(input, ctx);
     const event = toEvent(input);
     if (!event) return "";
+    if (event.kind === "turn_end" && input.transcript_path) {
+      // Claude waits for a command it runs in the background: still at work.
+      const transcript = ctx.readTranscript(input.transcript_path);
+      const running = transcript ? runningBackgroundTasks(transcript).length : 0;
+      if (running > 0) event.data = { ...event.data, background: running };
+    }
     await ctx.sendEvent(clientOf(input, ctx), { type: "event", ts: ctx.now(), session: sessionOf(input, ctx), ...event });
   } catch {
     // Never disturb the agent.

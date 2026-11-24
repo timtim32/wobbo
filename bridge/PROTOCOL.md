@@ -94,7 +94,7 @@ frames can arrive out of order.
 | `tool_error` | a tool failed | `tool`, `error` |
 | `notification` | the agent shows a notification | `message`, `notification_type` |
 | `input_wait` | the agent waits for the user in its own UI (a question, plan approval, a permission prompt) | `reason`, `tool` (optional), and the question fields below (optional) |
-| `turn_end` | the agent finished its turn | – |
+| `turn_end` | the agent finished its turn | `background` (optional): how many commands the agent started in the background still run |
 | `turn_error` | the turn failed (API error) | `error` |
 | `session_end` | the session ended | `reason` |
 
@@ -159,7 +159,7 @@ requests as well.
 | `session_start` | `idle` |
 | `prompt`, `tool_end`, `tool_error` | `thinking` |
 | `tool_start` | `working` |
-| `turn_end` | `done` |
+| `turn_end` | `done`; `working` when `background` is above 0 (the agent waits for a background command and is woken when it ends) |
 | `turn_error` | `error` |
 | a pending request | `waiting` (the previous state returns afterwards) |
 | `session_end` | `ended` (removed after 5 s) |

@@ -2,7 +2,7 @@ import { afterEach, expect, test } from "bun:test";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { AppConnection, readAppInfo, sendOnce } from "../src/app_client";
-import { askedQuestion, describePermission, focusUrl, NEXT_STEP_TOOL, type HookContext, isWobboTool, permissionDecision, runHook, toEvent, toolLabel } from "../src/adapters/claude_code";
+import { askedQuestion, describePermission, focusUrl, NEXT_STEP_TOOL, type HookContext, isWobboTool, permissionDecision, runHook, runningBackgroundTasks, toEvent, toolLabel } from "../src/adapters/claude_code";
 import { type FakeApp, startFakeApp } from "./fake_app";
 
 const samples: Record<string, any> = JSON.parse(readFileSync(join(import.meta.dir, "hook_samples.json"), "utf8"));
@@ -22,6 +22,7 @@ function ctx(overrides: Partial<HookContext> = {}): HookContext {
     permissionWaitMs: 2000,
     connect: (client, timeoutMs) => AppConnection.connect(client, timeoutMs, app ? readAppInfo(app.infoPath) : null),
     sendEvent: (client, message) => sendOnce(client, message, 300, app ? readAppInfo(app.infoPath) : null),
+    readTranscript: () => null,
     ...overrides,
   };
 }
@@ -238,4 +239,60 @@ test("long questions and choices are cut", () => {
   expect(q!.question.length).toBe(500);
   expect(q!.choices.length).toBe(6);
   expect(q!.choices[0].length).toBe(40);
+});
+
+// Lines as Claude Code 2.1 writes them to the transcript (background-work design D1).
+const startedLine = (id: string) =>
+  JSON.stringify({ type: "user", message: { role: "user", content: [{ type: "tool_result", content: `Command running in background with ID: ${id}.` }] },
+    toolUseResult: { stdout: "", stderr: "", interrupted: false, backgroundTaskId: id } });
+const endedLine = (id: string, status = "completed") =>
+  JSON.stringify({ type: "queue-operation", operation: "enqueue",
+    content: `<task-notification>\n<task-id>${id}</task-id>\n<tool-use-id>toolu_1</tool-use-id>\n<output-file>/tmp/${id}.output</output-file>\n<status>${status}</status>\n<summary>Background command "x" ${status}</summary>\n</task-notification>` });
+
+test("counts background commands that still run", () => {
+  expect(runningBackgroundTasks("")).toEqual([]);
+  expect(runningBackgroundTasks(startedLine("b1"))).toEqual(["b1"]);
+  expect(runningBackgroundTasks([startedLine("b1"), endedLine("b1")].join("\n"))).toEqual([]);
+  expect(runningBackgroundTasks([startedLine("b1"), startedLine("b2"), endedLine("b1", "failed")].join("\n"))).toEqual(["b2"]);
+  expect(runningBackgroundTasks([startedLine("b1"), endedLine("b1", "killed")].join("\n"))).toEqual([]);
+  expect(runningBackgroundTasks([startedLine("b1"), endedLine("b1", "running")].join("\n"))).toEqual(["b1"]);
+});
+
+test("a start quoted inside another tool's output is not counted", () => {
+  const quoted = JSON.stringify({ type: "user", message: { content: [{ type: "tool_result", content: startedLine("b9") }] } });
+  expect(runningBackgroundTasks(quoted)).toEqual([]);
+});
+
+test("the end of a turn carries the background commands that still run", async () => {
+  app = startFakeApp();
+  const read: string[] = [];
+  const readTranscript = (path: string) => (read.push(path), startedLine("b1"));
+  await runHook(JSON.stringify(samples.Stop), ctx({ readTranscript }));
+  expect(await app.waitFor((m) => m.type === "event")).toMatchObject({ kind: "turn_end", data: { background: 1 } });
+  expect(read).toEqual(["/tmp/t.jsonl"]);
+});
+
+test("without running background commands, the end of a turn is plain", async () => {
+  for (const transcript of [null, [startedLine("b1"), endedLine("b1")].join("\n")]) {
+    app = startFakeApp();
+    await runHook(JSON.stringify(samples.Stop), ctx({ readTranscript: () => transcript }));
+    const msg = await app.waitFor((m) => m.type === "event");
+    expect(msg.kind).toBe("turn_end");
+    expect(msg.data).toEqual({});
+    app.stop();
+    app = null;
+  }
+});
+
+test("an unreadable transcript is no background work", async () => {
+  const { defaultContext } = await import("../src/adapters/claude_code");
+  expect(defaultContext().readTranscript("/nonexistent/wobbo-test.jsonl")).toBeNull();
+});
+
+test("only the end of a turn reads the transcript", async () => {
+  app = startFakeApp();
+  let reads = 0;
+  await runHook(JSON.stringify(samples.PreToolUse), ctx({ readTranscript: () => (reads++, startedLine("b1")) }));
+  await app.waitFor((m) => m.type === "event");
+  expect(reads).toBe(0);
 });
