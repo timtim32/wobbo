@@ -356,7 +356,11 @@ When the app is not running, the hooks do nothing and the tools tell Claude to
 continue in the conversation. A permission prompt waits up to 20 seconds for
 Allow or Deny in the Wobbo's balloon before Claude Code shows its own prompt
 (at once when the output is Off or the Wobbos are hidden); set
-`WOBBO_PERMISSION_WAIT_S` to change that (0 turns it off).
+`WOBBO_PERMISSION_WAIT_S` to change that (0 turns it off). The balloon only
+offers Allow for what it can show in full: a long command, an edit or write
+(whose new content the balloon doesn't show), or an MCP call with several
+arguments goes straight to Claude Code's own prompt, and the Wobbo jumps for
+attention.
 
 ### Claude Desktop (MCP)
 

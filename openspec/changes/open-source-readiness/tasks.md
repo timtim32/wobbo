@@ -30,9 +30,9 @@ Commands used below:
 
 ## 4. Safer permission balloons (H4)
 
-- [ ] 4.1 Make `describePermission()` also report whether the description is complete (design D4). Add tests for a long Bash command, an MCP call with several arguments, an Edit with content, and a short command. Verify: bridge checks pass.
-- [ ] 4.2 In the `PermissionRequest` hook, send nothing to the app for an incomplete description and leave the decision to Claude Code, while the session still shows "waiting". Verify: a test with the fake app receives no request for a long command, and one for a short command.
-- [ ] 4.3 Update `bridge/PROTOCOL.md` or `DEVELOPMENT.md` where the permission behaviour is described. Verify: the text matches 4.2.
+- [x] 4.1 Make `describePermission()` also report whether the description is complete (design D4). Add tests for a long Bash command, an MCP call with several arguments, an Edit with content, and a short command. Verify: bridge checks pass.
+- [x] 4.2 In the `PermissionRequest` hook, send nothing to the app for an incomplete description and leave the decision to Claude Code, while the session still shows "waiting". Verify: a test with the fake app receives no request for a long command, and one for a short command.
+- [x] 4.3 Update `bridge/PROTOCOL.md` or `DEVELOPMENT.md` where the permission behaviour is described. Verify: the text matches 4.2.
 - [ ] 4.4 Manual check: in a Claude Code session, ask for a command longer than 300 characters. Claude Code shows its own prompt and the Wobbo jumps. A short command still shows Allow and Deny in the balloon.
 
 ## 5. Licensing paperwork (H5)

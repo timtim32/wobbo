@@ -151,26 +151,35 @@ export function toolLabel(tool: string): string {
 }
 
 const TEXT_FIELDS = ["command", "file_path", "url", "question", "text", "prompt", "query", "message", "path", "pattern"];
+const QUOTED_FIELDS = ["question", "text", "prompt", "message"];
+/** Fields that only describe or tune a call, so a description may leave them out. */
+const MINOR_FIELDS = ["description", "timeout", "run_in_background", "offset", "limit"];
+/** The longest description a balloon shows. */
+export const MAX_PERMISSION_TEXT = 300;
+
+export interface PermissionText {
+  /** One line, at most MAX_PERMISSION_TEXT characters. */
+  text: string;
+  /** False when the text leaves out part of what is asked: it was cut, or the call has more arguments. */
+  complete: boolean;
+}
 
 /** One-line, human-readable description of what a permission prompt asks for. */
-export function describePermission(input: HookInput): string {
+export function describePermission(input: HookInput): PermissionText {
   const tool = input.tool_name ?? "tool";
   const ti = input.tool_input ?? {};
-  let detail = "";
-  for (const field of TEXT_FIELDS) {
-    if (typeof ti[field] === "string" && ti[field]) {
-      detail = field === "question" || field === "text" || field === "prompt" || field === "message"
-        ? `"${ti[field]}"`
-        : (ti[field] as string);
-      break;
-    }
-  }
-  if (!detail) {
-    const firstString = Object.values(ti).find((v) => typeof v === "string" && v);
-    detail = firstString ? String(firstString) : Object.keys(ti).join(", ");
-  }
+  const significant = Object.keys(ti).filter((k) => !MINOR_FIELDS.includes(k) && ti[k] !== null && ti[k] !== undefined && ti[k] !== "");
+  const field =
+    TEXT_FIELDS.find((f) => typeof ti[f] === "string" && ti[f]) ?? significant.find((k) => typeof ti[k] === "string");
+  let detail = Object.keys(ti).join(", ");
+  if (field) detail = QUOTED_FIELDS.includes(field) ? `"${ti[field]}"` : (ti[field] as string);
   const text = detail ? `${toolLabel(tool)}: ${detail}` : toolLabel(tool);
-  return text.length > 300 ? `${text.slice(0, 297)}...` : text;
+  const fits = text.length <= MAX_PERMISSION_TEXT;
+  return {
+    text: fits ? text : `${text.slice(0, MAX_PERMISSION_TEXT - 3)}...`,
+    // Every argument that matters must be the one shown, in full (open-source-readiness D4).
+    complete: fits && significant.every((k) => k === field),
+  };
 }
 
 export function permissionDecision(behavior: "allow" | "deny"): string {
@@ -227,6 +236,17 @@ async function askPermission(input: HookInput, ctx: HookContext): Promise<string
   if (isBuddyTool(input.tool_name ?? "")) return "";
   // Asking the user is the interaction itself: no app prompt to allow it (work-and-wait D1).
   if (WAITS_FOR_USER.includes(input.tool_name ?? "")) return "";
+  const { text, complete } = describePermission(input);
+  if (!complete) {
+    // Never offer Allow for something the balloon can't show in full: Claude
+    // Code shows its own prompt at once, and the Wobbo jumps for attention
+    // (open-source-readiness D4).
+    await ctx.sendEvent(clientOf(input, ctx), {
+      type: "event", ts: ctx.now(), session: sessionOf(input, ctx),
+      kind: "input_wait", data: { reason: "permission_prompt", tool: input.tool_name ?? "" },
+    });
+    return "";
+  }
   const conn = await ctx.connect(clientOf(input, ctx), CONNECT_TIMEOUT_MS);
   if (!conn) return "";
   const id = `perm-${ctx.pid}-${ctx.now()}`;
@@ -236,7 +256,7 @@ async function askPermission(input: HookInput, ctx: HookContext): Promise<string
     id,
     session: sessionOf(input, ctx),
     kind: "permission",
-    text: describePermission(input),
+    text,
     choices: ["allow", "deny"],
     allow_text: false,
     timeout_s: Math.round(ctx.permissionWaitMs / 1000),

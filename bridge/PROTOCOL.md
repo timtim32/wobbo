@@ -128,7 +128,11 @@ right after it, so the session is not waiting.
 ```
 
 For `kind: "permission"`, `text` describes the action, for example
-`Bash: rm -rf build`, and `choices` is `["allow", "deny"]`.
+`Bash: rm -rf build`, and `choices` is `["allow", "deny"]`. The text always
+shows everything that is asked: a bridge sends no permission request when the
+description would be cut (over 300 characters) or the call has more than one
+argument that matters, such as an edit's new content. It sends an `input_wait`
+event instead and leaves the decision to the agent's own prompt.
 
 ### `cancel`
 
