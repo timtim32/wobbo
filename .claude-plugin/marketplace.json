@@ -1,0 +1,14 @@
+{
+  "name": "wobbo-dev",
+  "owner": {
+    "name": "Wobbo"
+  },
+  "description": "Development marketplace for the Wobbo plugin in this repository. Users get the plugin from the Wobbo app instead.",
+  "plugins": [
+    {
+      "name": "wobbo",
+      "source": "./bridge/plugin",
+      "description": "Claude Code sessions as Wobbo desktop buddies."
+    }
+  ]
+}

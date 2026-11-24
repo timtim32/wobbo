@@ -1,0 +1,4 @@
+schema: spec-driven
+created: 2026-11-23
+# Pure refactor: no spec-level behaviour changes (see proposal.md).
+skip_specs: true

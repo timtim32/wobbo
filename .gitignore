@@ -1,0 +1,36 @@
+# Godot
+.godot/
+*.translation
+export.cfg
+export_credentials.cfg
+/godot/addons/*/bin/*.dylib
+/godot/addons/*/bin/*.framework/
+
+# Native build output
+/native/build/
+/native/.sconsign.dblite
+*.o
+*.os
+
+# Bridge (Node/Bun)
+node_modules/
+/bridge/dist/
+
+# macOS
+.DS_Store
+
+# Wobbo plugin binary (built by `bun run build:plugin`)
+/bridge/plugin/bin/
+
+# Temporary files left by interrupted `bun build --compile` runs
+*.bun-build
+
+# Wobbo app builds (tools/release.sh)
+/build/
+
+# Personal AI tooling: each developer sets these up locally (docs/DEVELOPMENT.md)
+/.claude/
+/.agents/
+/.mcp.json
+/CLAUDE.md
+/AGENTS.md

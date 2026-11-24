@@ -1,0 +1,62 @@
+#!/usr/bin/env python
+# Builds the macos_overlay GDExtension (design D4).
+#
+#   scons -C native                         # template_debug (used by editor runs)
+#   scons -C native target=template_release
+#   scons -C native target=template_release arch=universal   # for releases (standalone-app D1)
+#
+# The bindings are generated from an API dump of the installed engine
+# (`Godot --dump-extension-api`), so they match Godot 4.7 exactly. Set GODOT to
+# use another engine binary. The dump is refreshed when the engine version changes.
+import os
+import platform
+import subprocess
+
+GODOT = os.environ.get("GODOT", "/Applications/Godot.app/Contents/MacOS/Godot")
+ROOT = Dir("#").abspath
+API_DIR = os.path.join(ROOT, "build", "api")
+API_FILE = os.path.join(API_DIR, "extension_api.json")
+VERSION_FILE = os.path.join(API_DIR, "godot_version.txt")
+OUT_DIR = os.path.join(ROOT, "..", "godot", "addons", "macos_overlay", "bin")
+
+
+def dump_extension_api():
+    version = subprocess.check_output([GODOT, "--version"], text=True).strip()
+    cached = open(VERSION_FILE).read().strip() if os.path.exists(VERSION_FILE) else ""
+    if os.path.exists(API_FILE) and cached == version:
+        return
+    print("Dumping extension API from Godot %s" % version)
+    os.makedirs(API_DIR, exist_ok=True)
+    subprocess.check_call([GODOT, "--headless", "--dump-extension-api"], cwd=API_DIR)
+    with open(VERSION_FILE, "w") as f:
+        f.write(version + "\n")
+
+
+if not GetOption("help") and not GetOption("clean"):
+    dump_extension_api()
+
+# Defaults for godot-cpp's options; command-line arguments (e.g. arch=universal) still win.
+env = Environment(tools=["default"], PLATFORM="")
+env["platform"] = "macos"
+env["arch"] = "arm64" if platform.machine() == "arm64" else "x86_64"
+env["custom_api_file"] = API_FILE
+env["build_profile"] = os.path.join(ROOT, "build_profile.json")
+Export("env")
+env = SConscript("godot-cpp/SConstruct")
+
+if env["platform"] != "macos":
+    print("macos_overlay only supports platform=macos")
+    Exit(1)
+
+env.Append(CPPPATH=["src/"])
+env.Append(CCFLAGS=["-fobjc-arc"])
+env.Append(LINKFLAGS=["-framework", "AppKit", "-framework", "ApplicationServices", "-framework", "ServiceManagement"])
+
+name = "libmacos_overlay.{}.{}".format(env["platform"], env["target"])
+library = env.SharedLibrary(
+    os.path.join(OUT_DIR, name + ".framework", name),
+    source=Glob("src/*.cpp") + Glob("src/*.mm"),
+)
+
+env.NoCache(library)
+Default(library)

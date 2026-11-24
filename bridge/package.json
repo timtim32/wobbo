@@ -1,0 +1,22 @@
+{
+  "name": "wobbo-bridge",
+  "version": "0.2.4",
+  "private": true,
+  "type": "module",
+  "description": "Connects coding agents (Claude Code, Claude Desktop, ...) to the Wobbo app.",
+  "scripts": {
+    "test": "bun test",
+    "typecheck": "tsc --noEmit",
+    "build": "bun build src/main.ts --compile --minify --outfile dist/wobbo-bridge",
+    "build:plugin": "bun run build && mkdir -p plugin/bin && rm -f plugin/bin/claude-buddy-bridge plugin/bin/wobbo-bridge && cp dist/wobbo-bridge plugin/bin/wobbo-bridge",
+    "build:universal": "bun build src/main.ts --compile --minify --target=bun-darwin-arm64 --outfile dist/wobbo-bridge-arm64 && bun build src/main.ts --compile --minify --target=bun-darwin-x64 --outfile dist/wobbo-bridge-x64 && lipo -create -output dist/wobbo-bridge dist/wobbo-bridge-arm64 dist/wobbo-bridge-x64"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.32.2",
+    "zod": "^4.6.7"
+  },
+  "devDependencies": {
+    "bun-types": "^1.4.5",
+    "typescript": "^7.0.2"
+  }
+}

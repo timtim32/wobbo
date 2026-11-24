@@ -1,0 +1,10 @@
+[configuration]
+
+entry_symbol = "macos_overlay_library_init"
+compatibility_minimum = "4.7"
+reloadable = false
+
+[libraries]
+
+macos.debug = "res://addons/macos_overlay/bin/libmacos_overlay.macos.template_debug.framework"
+macos.release = "res://addons/macos_overlay/bin/libmacos_overlay.macos.template_release.framework"

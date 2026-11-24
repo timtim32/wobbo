@@ -1,0 +1,12 @@
+{
+  "mcpServers": {
+    "wobbo": {
+      "command": "${CLAUDE_PLUGIN_ROOT}/bin/wobbo-bridge",
+      "args": [
+        "mcp",
+        "--agent",
+        "claude-code"
+      ]
+    }
+  }
+}

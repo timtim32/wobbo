@@ -1,0 +1,380 @@
+{
+	"canvas": [
+		400.0,
+		440.0
+	],
+	"figure_rect": [
+		2,
+		16,
+		397,
+		417
+	],
+	"parts": {
+		"arm_front_l": {
+			"order": 20,
+			"pivot": [
+				68.8,
+				295.2
+			],
+			"rect": [
+				22,
+				285,
+				170,
+				92
+			],
+			"visible": false
+		},
+		"arm_front_r": {
+			"order": 19,
+			"pivot": [
+				331.8,
+				295.2
+			],
+			"rect": [
+				208,
+				285,
+				170,
+				92
+			],
+			"visible": false
+		},
+		"arm_l": {
+			"order": 2,
+			"pivot": [
+				71.4,
+				270.2
+			],
+			"rect": [
+				21,
+				259,
+				70,
+				147
+			],
+			"visible": true
+		},
+		"arm_r": {
+			"order": 3,
+			"pivot": [
+				329.3,
+				270.2
+			],
+			"rect": [
+				310,
+				259,
+				70,
+				147
+			],
+			"visible": true
+		},
+		"arm_r_think": {
+			"order": 16,
+			"pivot": [
+				331.8,
+				270.2
+			],
+			"rect": [
+				208,
+				260,
+				170,
+				92
+			],
+			"visible": false
+		},
+		"body": {
+			"order": 6,
+			"pivot": [
+				200.3,
+				362.6
+			],
+			"rect": [
+				60,
+				16,
+				281,
+				362
+			],
+			"visible": true
+		},
+		"brows": {
+			"order": 12,
+			"pivot": [
+				200.3,
+				98.0
+			],
+			"rect": [
+				147,
+				75,
+				101,
+				27
+			],
+			"visible": true
+		},
+		"cheeks": {
+			"order": 8,
+			"pivot": [
+				200.3,
+				362.6
+			],
+			"rect": [
+				118,
+				224,
+				165,
+				16
+			],
+			"visible": true
+		},
+		"ear_l": {
+			"order": 4,
+			"pivot": [
+				71.4,
+				182.0
+			],
+			"rect": [
+				2,
+				139,
+				82,
+				84
+			],
+			"visible": true
+		},
+		"ear_r": {
+			"order": 5,
+			"pivot": [
+				329.3,
+				182.0
+			],
+			"rect": [
+				316,
+				139,
+				83,
+				84
+			],
+			"visible": true
+		},
+		"eye_white": {
+			"order": 9,
+			"pivot": [
+				200.3,
+				166.0
+			],
+			"rect": [
+				123,
+				94,
+				155,
+				142
+			],
+			"visible": true
+		},
+		"eyelid": {
+			"order": 11,
+			"pivot": [
+				199.1,
+				99.7
+			],
+			"rect": [
+				131,
+				99,
+				137,
+				137
+			],
+			"visible": false
+		},
+		"fangs": {
+			"order": 18,
+			"pivot": [
+				200.3,
+				270.2
+			],
+			"rect": [
+				161,
+				271,
+				79,
+				20
+			],
+			"visible": true
+		},
+		"leg_l": {
+			"order": 0,
+			"pivot": [
+				147.8,
+				362.6
+			],
+			"rect": [
+				118,
+				345,
+				61,
+				88
+			],
+			"visible": true
+		},
+		"leg_r": {
+			"order": 1,
+			"pivot": [
+				252.8,
+				362.6
+			],
+			"rect": [
+				222,
+				345,
+				61,
+				88
+			],
+			"visible": true
+		},
+		"mouth_laugh": {
+			"order": 17,
+			"pivot": [
+				200.3,
+				270.2
+			],
+			"rect": [
+				133,
+				261,
+				135,
+				63
+			],
+			"visible": false
+		},
+		"mouth_neutral": {
+			"order": 13,
+			"pivot": [
+				200.3,
+				270.2
+			],
+			"rect": [
+				143,
+				266,
+				115,
+				10
+			],
+			"visible": true
+		},
+		"mouth_open": {
+			"order": 15,
+			"pivot": [
+				200.3,
+				270.2
+			],
+			"rect": [
+				147,
+				262,
+				106,
+				45
+			],
+			"visible": false
+		},
+		"mouth_smile": {
+			"order": 14,
+			"pivot": [
+				200.3,
+				270.2
+			],
+			"rect": [
+				140,
+				260,
+				121,
+				22
+			],
+			"visible": false
+		},
+		"prop_hammer": {
+			"order": 21,
+			"pivot": [
+				354.5,
+				373.5
+			],
+			"rect": [
+				322,
+				259,
+				68,
+				143
+			],
+			"visible": false
+		},
+		"prop_laptop": {
+			"order": 23,
+			"pivot": [
+				200.5,
+				364.0
+			],
+			"rect": [
+				107,
+				300,
+				187,
+				74
+			],
+			"visible": false
+		},
+		"prop_page": {
+			"order": 25,
+			"pivot": [
+				201.5,
+				365.0
+			],
+			"rect": [
+				202,
+				301,
+				64,
+				64
+			],
+			"visible": false
+		},
+		"prop_papers": {
+			"order": 24,
+			"pivot": [
+				200.5,
+				372.0
+			],
+			"rect": [
+				132,
+				300,
+				139,
+				72
+			],
+			"visible": false
+		},
+		"prop_wrench": {
+			"order": 22,
+			"pivot": [
+				329.3,
+				270.2
+			],
+			"rect": [
+				333,
+				271,
+				43,
+				133
+			],
+			"visible": false
+		},
+		"pupil": {
+			"order": 10,
+			"pivot": [
+				200.3,
+				166.0
+			],
+			"rect": [
+				169,
+				137,
+				63,
+				63
+			],
+			"visible": true
+		},
+		"spots": {
+			"order": 7,
+			"pivot": [
+				200.3,
+				362.6
+			],
+			"rect": [
+				85,
+				42,
+				233,
+				228
+			],
+			"visible": true
+		}
+	},
+	"px_per_unit": 1.0,
+	"source": "art/monster/monster.svg"
+}

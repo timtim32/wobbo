@@ -1,0 +1,56 @@
+; Engine configuration file.
+; It's best edited using the editor UI and not directly,
+; since the parameters that go here are not all obvious.
+;
+; Format:
+;   [section] ; section goes between []
+;   param=value ; assign values to parameters
+
+config_version=5
+
+[application]
+
+config/name="Wobbo"
+config/description="Desktop buddies that show what your Claude Code sessions are doing."
+run/main_scene="res://scenes/boot.tscn"
+config/use_custom_user_dir=true
+config/custom_user_dir_name="Wobbo"
+config/features=PackedStringArray("4.7", "GL Compatibility")
+run/flush_stdout_on_print=true
+run/max_fps=30
+boot_splash/show_image=false
+boot_splash/bg_color=Color(0, 0, 0, 0)
+
+[audio]
+
+general/text_to_speech=true
+
+[autoload]
+
+Instance="*res://scripts/autoload/instance.gd"
+Settings="*res://scripts/autoload/settings.gd"
+Overlay="*res://scripts/autoload/overlay_controller.gd"
+Bridge="*res://scripts/autoload/bridge.gd"
+_mcp_game_helper="*res://addons/godot_ai/runtime/game_helper.gd"
+
+[display]
+
+window/size/borderless=true
+window/size/always_on_top=true
+window/size/transparent=true
+window/size/no_focus=true
+window/subwindows/embed_subwindows=false
+window/per_pixel_transparency/allowed=true
+window/vsync/vsync_mode=0
+window/energy_saving/keep_screen_on=false
+
+[editor_plugins]
+
+enabled=PackedStringArray("res://addons/godot_ai/plugin.cfg")
+
+[rendering]
+
+renderer/rendering_method="gl_compatibility"
+renderer/rendering_method.mobile="gl_compatibility"
+textures/vram_compression/import_etc2_astc=true
+viewport/transparent_background=true

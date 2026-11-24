@@ -1,0 +1,149 @@
+[gd_scene format=3 uid="uid://dj4ljqrr4nxuu"]
+
+[ext_resource type="Script" uid="uid://bv05o5c0dk1ev" path="res://characters/monster/monster.gd" id="1_script"]
+[ext_resource type="Shader" uid="uid://dk7tywhgvxm2y" path="res://characters/monster/monster_skin.gdshader" id="2_shader"]
+[ext_resource type="AnimationLibrary" path="res://characters/monster/clips/body_clips.tres" id="3_body"]
+[ext_resource type="AnimationLibrary" path="res://characters/monster/clips/face_clips.tres" id="4_face"]
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_skin"]
+shader = ExtResource("2_shader")
+shader_parameter/hue_shift = 0.0
+shader_parameter/saturation_threshold = 0.15
+
+[node name="Monster" type="Node2D" unique_id=2030947330]
+script = ExtResource("1_script")
+
+[node name="Skeleton2D" type="Skeleton2D" parent="." unique_id=1692137441]
+material = SubResource("ShaderMaterial_skin")
+
+[node name="root" type="Bone2D" parent="Skeleton2D" unique_id=391098576]
+rest = Transform2D(1, 0, 0, 1, 0, 0)
+auto_calculate_length_and_angle = false
+length = 20.0
+bone_angle = -90.0
+
+[node name="leg_l" type="Bone2D" parent="Skeleton2D/root" unique_id=1096529787]
+rest = Transform2D(1, 0, 0, 1, 0, 0)
+auto_calculate_length_and_angle = false
+length = 50.0
+bone_angle = 90.0
+
+[node name="LegL" type="Sprite2D" parent="Skeleton2D/root/leg_l" unique_id=40961930]
+
+[node name="leg_r" type="Bone2D" parent="Skeleton2D/root" unique_id=219189424]
+rest = Transform2D(1, 0, 0, 1, 0, 0)
+auto_calculate_length_and_angle = false
+length = 50.0
+bone_angle = 90.0
+
+[node name="LegR" type="Sprite2D" parent="Skeleton2D/root/leg_r" unique_id=681362458]
+
+[node name="body" type="Bone2D" parent="Skeleton2D/root" unique_id=1269327857]
+rest = Transform2D(1, 0, 0, 1, 0, 0)
+auto_calculate_length_and_angle = false
+length = 200.0
+bone_angle = -90.0
+
+[node name="arm_l" type="Bone2D" parent="Skeleton2D/root/body" unique_id=1862977700]
+rest = Transform2D(1, 0, 0, 1, 0, 0)
+auto_calculate_length_and_angle = false
+length = 110.0
+bone_angle = 99.99999
+
+[node name="ArmL" type="Sprite2D" parent="Skeleton2D/root/body/arm_l" unique_id=1807446568]
+
+[node name="arm_r" type="Bone2D" parent="Skeleton2D/root/body" unique_id=719110336]
+rest = Transform2D(1, 0, 0, 1, 0, 0)
+auto_calculate_length_and_angle = false
+length = 110.0
+bone_angle = 79.99999
+
+[node name="ArmR" type="Sprite2D" parent="Skeleton2D/root/body/arm_r" unique_id=1083390756]
+
+[node name="PropHammer" type="Sprite2D" parent="Skeleton2D/root/body/arm_r"]
+visible = false
+
+[node name="PropWrench" type="Sprite2D" parent="Skeleton2D/root/body/arm_r"]
+visible = false
+
+[node name="ear_l" type="Bone2D" parent="Skeleton2D/root/body" unique_id=947650629]
+rest = Transform2D(1, 0, 0, 1, 0, 0)
+auto_calculate_length_and_angle = false
+length = 60.0
+bone_angle = 199.99998
+
+[node name="EarL" type="Sprite2D" parent="Skeleton2D/root/body/ear_l" unique_id=272872976]
+
+[node name="ear_r" type="Bone2D" parent="Skeleton2D/root/body" unique_id=1259757025]
+rest = Transform2D(1, 0, 0, 1, 0, 0)
+auto_calculate_length_and_angle = false
+length = 60.0
+bone_angle = -19.999998
+
+[node name="EarR" type="Sprite2D" parent="Skeleton2D/root/body/ear_r" unique_id=1052376432]
+
+[node name="Body" type="Sprite2D" parent="Skeleton2D/root/body" unique_id=1084264529]
+
+[node name="Spots" type="Sprite2D" parent="Skeleton2D/root/body" unique_id=2037655905]
+
+[node name="Cheeks" type="Sprite2D" parent="Skeleton2D/root/body" unique_id=1154999496]
+
+[node name="eye" type="Bone2D" parent="Skeleton2D/root/body" unique_id=701178331]
+rest = Transform2D(1, 0, 0, 1, 0, 0)
+auto_calculate_length_and_angle = false
+length = 30.0
+bone_angle = -90.0
+
+[node name="EyeWhite" type="Sprite2D" parent="Skeleton2D/root/body/eye" unique_id=639276216]
+
+[node name="Look" type="Node2D" parent="Skeleton2D/root/body/eye" unique_id=162174420]
+
+[node name="Pupil" type="Sprite2D" parent="Skeleton2D/root/body/eye/Look" unique_id=819997586]
+
+[node name="Eyelid" type="Sprite2D" parent="Skeleton2D/root/body/eye" unique_id=1598352560]
+
+[node name="Brows" type="Sprite2D" parent="Skeleton2D/root/body/eye" unique_id=516671993]
+
+[node name="mouth" type="Bone2D" parent="Skeleton2D/root/body" unique_id=960558348]
+rest = Transform2D(1, 0, 0, 1, 0, 0)
+auto_calculate_length_and_angle = false
+length = 20.0
+bone_angle = 90.0
+
+[node name="MouthNeutral" type="Sprite2D" parent="Skeleton2D/root/body/mouth" unique_id=793565364]
+
+[node name="MouthSmile" type="Sprite2D" parent="Skeleton2D/root/body/mouth" unique_id=605131227]
+visible = false
+
+[node name="MouthOpen" type="Sprite2D" parent="Skeleton2D/root/body/mouth" unique_id=1378872646]
+visible = false
+
+[node name="MouthLaugh" type="Sprite2D" parent="Skeleton2D/root/body/mouth" unique_id=761091328]
+visible = false
+
+[node name="Fangs" type="Sprite2D" parent="Skeleton2D/root/body/mouth" unique_id=1862859664]
+
+[node name="ArmRThink" type="Sprite2D" parent="Skeleton2D/root/body" unique_id=210456937]
+visible = false
+
+[node name="ArmFrontL" type="Sprite2D" parent="Skeleton2D/root/body"]
+visible = false
+
+[node name="ArmFrontR" type="Sprite2D" parent="Skeleton2D/root/body"]
+visible = false
+
+[node name="PropLaptop" type="Sprite2D" parent="Skeleton2D/root/body"]
+visible = false
+
+[node name="PropPapers" type="Sprite2D" parent="Skeleton2D/root/body"]
+visible = false
+
+[node name="PropPage" type="Sprite2D" parent="Skeleton2D/root/body"]
+visible = false
+
+[node name="BodyPlayer" type="AnimationPlayer" parent="." unique_id=756582904]
+libraries/ = ExtResource("3_body")
+playback_default_blend_time = 0.15
+
+[node name="FacePlayer" type="AnimationPlayer" parent="." unique_id=451868073]
+libraries/ = ExtResource("4_face")

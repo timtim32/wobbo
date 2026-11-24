@@ -1,0 +1,40 @@
+schema: spec-driven
+
+context: |
+  Wobbo (formerly Claude Buddy): a desktop overlay where small animated monster avatars walk along the
+  bottom of the screen and act as the face of Claude Code sessions (one avatar per session).
+
+  Fixed product decisions (do not re-open without the user):
+  - Platform: macOS only. Engine: Godot 4.7 (GDScript), GL Compatibility renderer.
+  - Overlay: transparent, borderless, always-on-top, click-through except on avatars and
+    balloons; visible on all Spaces and above fullscreen apps; never steals keyboard focus
+    unless the user clicks into a balloon text field. Needs a small native macOS GDExtension.
+  - Integration: Claude Code hooks for automatic status + an MCP server (tools like `say`,
+    `ask_user`) so Claude can address the avatar on purpose. Both are served by one small
+    bridge program that talks to the Godot app over a local WebSocket (127.0.0.1 only).
+  - Character: original one-eyed green monster (pointy ears, two fangs, spots, short arms
+    and legs), redrawn as layered SVG and rigged with Skeleton2D. Per-session colour via a
+    hue-shift shader plus a name label (project name).
+  - Sessions: one avatar per session, walks in on SessionStart, waves and walks off on
+    SessionEnd, falls asleep when idle; at most ~5 avatars at once.
+  - Light "needs": mood follows Claude's state (thinking, working, done, error, waiting on
+    user) plus boredom/joy; no feeding, levels or evolution.
+  - Output: speech balloon and/or built-in TTS (DisplayServer.tts_*), chosen globally in a
+    macOS menu bar icon. Default notifications: questions & permission requests, turn
+    finished, errors / failing tests.
+  - Input: buttons in the balloon (multiple choice, Allow/Deny) and a free-text field.
+  - Avatar interactions: click focuses the session's window, drag & drop, right-click menu.
+
+  Repository layout: godot/ (Godot project), native/ (GDExtension, Objective-C++),
+  bridge/ (hooks + MCP bridge), art/ (SVG sources), openspec/.
+  The user develops with a Godot MCP server and OpenSpec; prefer tasks that can be verified
+  by running the Godot project.
+
+rules:
+  proposal:
+    - State explicitly what is out of scope for this change
+  design:
+    - Call out macOS-specific APIs and Godot version assumptions
+    - Mark unproven technical assumptions as spikes with a fallback
+  tasks:
+    - Every task group ends with a manual verification step the user can perform
