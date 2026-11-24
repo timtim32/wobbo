@@ -6,6 +6,7 @@ extends RefCounted
 ## The avatar node reports its phase changes (arrive, travel, leave) and
 ## finished one-shot clips back.
 
+const Protocol := preload("res://scripts/bridge/protocol.gd")
 const SLEEP_AFTER_MS := 120 * 1000
 ## Asleep this long: the avatar goes home (send-home D3).
 const HOME_AFTER_ASLEEP_MS := 15 * 60 * 1000
@@ -14,9 +15,9 @@ const PAUSE_MAX_MS := 6000
 const STROLL_MIN_MS := 8000
 const STROLL_MAX_MS := 15000
 
-const STATE_CLIPS := {&"thinking": &"thinking", &"working": &"working", &"waiting": &"waiting"}
-const REACTIONS := {&"done": &"happy", &"error": &"error"}
-const RESTING := [&"idle", &"done", &"error"]
+const STATE_CLIPS := {Protocol.STATE_THINKING: &"thinking", Protocol.STATE_WORKING: &"working", Protocol.STATE_WAITING: &"waiting"}
+const REACTIONS := {Protocol.STATE_DONE: &"happy", Protocol.STATE_ERROR: &"error"}
+const RESTING := [Protocol.STATE_IDLE, Protocol.STATE_DONE, Protocol.STATE_ERROR]
 ## Ways of working (work-and-wait D5, D7). All but plain `working` have a prop
 ## with `_in` / `_out` transitions around their loop.
 const WORK_CLIPS: Array[StringName] = [&"working", &"work_hammer", &"work_laptop", &"work_wrench", &"work_papers"]
@@ -84,7 +85,7 @@ func one_shot_finished(clip: StringName) -> void:
 		_work_phase = &"loop"
 		return
 	if _work_clip != &"" and clip == _with_suffix("_out"):
-		_work_next = _state == &"working"
+		_work_next = _state == Protocol.STATE_WORKING
 		_work_clip = &""
 		_work_phase = &""
 		return
@@ -130,7 +131,7 @@ func update(state: StringName, last_activity_msec: int, now_msec: int) -> Dictio
 
 ## The work clip to show, or {} when not working (work-and-wait D5, D7).
 func _work(state: StringName, now_msec: int) -> Dictionary:
-	if _work_clip != &"" and state != &"working" and _work_phase != &"out":
+	if _work_clip != &"" and state != Protocol.STATE_WORKING and _work_phase != &"out":
 		# Stop working: put the prop away first, then the new state.
 		if _has_prop(_work_clip):
 			_work_phase = &"out"
@@ -138,7 +139,7 @@ func _work(state: StringName, now_msec: int) -> Dictionary:
 			_drop_work()
 	if _work_phase == &"out":
 		return {"clip": _with_suffix("_out"), "motion": &"stand"}
-	if state != &"working":
+	if state != Protocol.STATE_WORKING:
 		_work_next = false
 		return {}
 	if _work_clip == &"" or _work_next:

@@ -43,6 +43,7 @@ Install them once: Godot editor > Editor > Manage Export Templates > Download an
 set_version() {
 	local v="$1"
 	sed -i '' -E "s/^application\/(short_version|version)=\".*\"/application\/\1=\"$v\"/" "$ROOT/godot/export_presets.cfg"
+	sed -i '' -E "s/^config\/version=\".*\"/config\/version=\"$v\"/" "$ROOT/godot/project.godot"
 	sed -i '' -E "s/(\"version\": )\"[^\"]*\"/\1\"$v\"/" "$ROOT/bridge/package.json" "$ROOT/bridge/plugin/.claude-plugin/plugin.json"
 	sed -i '' -E "s/BRIDGE_VERSION = \"[^\"]*\"/BRIDGE_VERSION = \"$v\"/" "$ROOT/bridge/src/protocol.ts"
 }

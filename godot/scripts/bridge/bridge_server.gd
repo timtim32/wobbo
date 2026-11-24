@@ -19,7 +19,6 @@ signal session_event(session_id: String, kind: String, data: Dictionary)
 
 const Protocol := preload("res://scripts/bridge/protocol.gd")
 const SessionRegistry := preload("res://scripts/core/session_registry.gd")
-const APP_VERSION := "0.1.0"
 const TICK_SEC := 1.0
 
 
@@ -44,6 +43,11 @@ var _server := TCPServer.new()
 var _conns: Dictionary = {} # connection id -> Connection
 var _next_conn := 1
 var _tick_left := TICK_SEC
+
+
+## The app's version, set by tools/release.sh in project.godot and the export preset.
+static func app_version() -> String:
+	return str(ProjectSettings.get_setting("application/config/version", "0.0.0"))
 
 
 func is_running() -> bool:
@@ -167,7 +171,7 @@ func _handle(id: int, text: String, now_msec: int) -> void:
 			return
 		c.ready = true
 		c.client = msg.get("client", {}) if typeof(msg.get("client")) == TYPE_DICTIONARY else {}
-		_send(id, {"type": "welcome", "app_version": APP_VERSION})
+		_send(id, {"type": "welcome", "app_version": app_version()})
 		return
 	var ts := int(msg.get("ts", 0))
 	match msg.get("type"):

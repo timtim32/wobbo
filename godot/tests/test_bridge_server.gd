@@ -77,7 +77,9 @@ func test_info_file_is_private_and_removed_on_stop() -> void:
 
 func test_handshake_with_token() -> void:
 	var ws := _connect(server.token)
-	assert_eq(_receive(ws).get("type"), "welcome")
+	var welcome := _receive(ws)
+	assert_eq(welcome.get("type"), "welcome")
+	assert_eq(welcome.get("app_version"), ProjectSettings.get_setting("application/config/version"), "the app's own version")
 	ws.close()
 
 

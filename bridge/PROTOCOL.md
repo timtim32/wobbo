@@ -37,7 +37,7 @@ MCP server process. `client_name` is the MCP client's name from the MCP
 The app answers with one of these:
 
 ```json
-{"v": 1, "type": "welcome", "app_version": "0.1.0"}
+{"v": 1, "type": "welcome", "app_version": "0.2.4"}
 {"v": 1, "type": "error", "reason": "bad_token"}
 ```
 
