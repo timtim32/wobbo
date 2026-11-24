@@ -62,7 +62,7 @@ class Strip:
 	var room_px := 0 # px between the usable area's top and the strip's top (buddy-drag D6)
 	var window: Window # the root window for the main display, else a Window node
 	var stage: Node2D # content views and debug drawing for this strip
-	var ui: CanvasLayer # panels (session panel, debug text field) in this strip's window
+	var ui: CanvasLayer # panels (the debug session panel) in this strip's window
 	var applied := "" # last applied pass-through key ("" = none yet)
 	var empty_for := 0.0 # seconds without visible content
 

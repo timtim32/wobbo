@@ -24,9 +24,14 @@ var overlay_visible: bool:
 	set(value):
 		set_value(&"overlay_visible", value)
 
+## Debug features exist only in debug builds: the editor and debug exports
+## (open-source-readiness D2). Tests may set it to check the release behaviour.
+var debug_build := OS.is_debug_build()
+
+## Always false in a release build, whatever was saved.
 var debug_regions: bool:
 	get:
-		return _store.get_value(&"debug_regions")
+		return debug_build and _store.get_value(&"debug_regions")
 	set(value):
 		set_value(&"debug_regions", value)
 

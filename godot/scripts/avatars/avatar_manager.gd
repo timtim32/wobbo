@@ -3,9 +3,6 @@ extends Node
 ## Bridge's sessions into SessionAvatar nodes, using the pure AvatarCast for
 ## who is on screen, in which slot and colour, and routes clicks.
 
-## "Type here (debug)" in an avatar's context menu (send-home D4).
-signal avatar_text_requested(avatar: Node)
-
 const Cast := preload("res://scripts/core/avatar_cast.gd")
 const Protocol := preload("res://scripts/bridge/protocol.gd")
 const SessionAvatar := preload("res://scripts/avatars/session_avatar.gd")
@@ -233,10 +230,6 @@ func build_menu(a: Node) -> RID:
 	var menu := NativeMenu.create_menu()
 	var id: String = a.session_id
 	NativeMenu.add_item(menu, "Send home", func(_tag: Variant) -> void: send_home(id))
-	if Settings.debug_regions:
-		NativeMenu.add_item(menu, "Type here (debug)", func(_tag: Variant) -> void:
-			if is_instance_valid(a):
-				avatar_text_requested.emit(a))
 	return menu
 
 

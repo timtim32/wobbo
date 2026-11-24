@@ -8,7 +8,6 @@ const TrailerMode := preload("res://scripts/core/trailer_mode.gd")
 const CARRY_FPS := 60
 
 @export var avatars_path: NodePath
-@export var text_field_path: NodePath
 @export var messages_path: NodePath
 
 var quiet := false
@@ -17,7 +16,6 @@ var check_pointer := true
 var quiet_fps := QuietMode.QUIET_FPS
 var _normal_fps := 30
 @onready var _avatars: Node = get_node_or_null(avatars_path)
-@onready var _text_field: Control = get_node_or_null(text_field_path)
 @onready var _messages: Node = get_node_or_null(messages_path)
 
 
@@ -39,7 +37,7 @@ func _process(_delta: float) -> void:
 	if _avatars:
 		list = _avatars.avatars().map(func(a) -> Dictionary: return {"asleep": a.mood.asleep, "going": a.is_going(), "moving": a.is_moving()})
 	var now_quiet := QuietMode.is_quiet(Overlay.content_visible, list, Settings.debug_regions,
-		_text_field != null and _text_field.visible, check_pointer and _pointer_on_strip(),
+		check_pointer and _pointer_on_strip(),
 		_messages != null and _messages.any_balloon_open())
 	var carrying := Overlay.headroom_active()
 	if carrying:

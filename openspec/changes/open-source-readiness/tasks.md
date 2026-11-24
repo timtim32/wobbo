@@ -13,11 +13,11 @@ Commands used below:
 
 ## 2. Release hygiene (H1)
 
-- [ ] 2.1 Spike S1 (design D1): export a release build with `addons/godot_ai/*` excluded. Check whether the app starts without errors about `_mcp_game_helper`. Record the outcome and the chosen autoload approach in `design.md`. Verify: the log of the exported app, run with `--verbose`.
-- [ ] 2.2 Add `addons/godot_ai/*` and `characters/monster/*_preview.tscn` to `exclude_filter`, and apply the autoload approach from 2.1. Verify: an exported build's `.pck` contains no `addons/godot_ai` or `_preview` files (list it with `--headless --pck-list` or by unpacking); the Godot suite passes.
-- [ ] 2.3 Show "Debug regions" in the menu and "Type here (debug)" on avatars only when `OS.is_debug_build()`, and read `debug_regions` as false in release builds (design D2). Verify: a test for the settings fallback; in an editor run both items are present.
-- [ ] 2.4 Remove `scripts/debug/debug_text_field.gd` and its menu item and region. Verify: `git grep -n "debug_text_field\|Type here (debug)"` finds nothing; the Godot suite passes.
-- [ ] 2.5 Correct the "stripped on export" lines in `docs/codebase-audit.md` (lines 115 and 585) to describe what 2.2 does. Verify: the diff touches only those lines.
+- [x] 2.1 Spike S1 (design D1): export a release build with `addons/godot_ai/*` excluded. Check whether the app starts without errors about `_mcp_game_helper`. Record the outcome and the chosen autoload approach in `design.md`. Verify: the log of the exported app, run with `--verbose`.
+- [x] 2.2 Add `addons/godot_ai/*` and `characters/monster/*_preview.tscn` to `exclude_filter`, and apply the autoload approach from 2.1. Verify: an exported build's `.pck` contains no `addons/godot_ai` or `_preview` files (list it with `--headless --pck-list` or by unpacking); the Godot suite passes.
+- [x] 2.3 Show "Debug regions" in the menu and "Type here (debug)" on avatars only when `OS.is_debug_build()`, and read `debug_regions` as false in release builds (design D2). Verify: a test for the settings fallback; in an editor run both items are present.
+- [x] 2.4 Remove `scripts/debug/debug_text_field.gd` and its menu item and region. Verify: `git grep -n "debug_text_field\|Type here (debug)"` finds nothing; the Godot suite passes.
+- [x] 2.5 Correct the "stripped on export" lines in `docs/codebase-audit.md` (lines 115 and 585) to describe what 2.2 does. Verify: the diff touches only those lines.
 - [ ] 2.6 Manual check: the user builds with `tools/release.sh build`, installs it and opens the menu: there is no "Debug regions", and right-clicking a Wobbo shows no debug item. In the editor, the godot-ai MCP server still attaches.
 
 ## 3. Trustworthy tests (H2, H3)

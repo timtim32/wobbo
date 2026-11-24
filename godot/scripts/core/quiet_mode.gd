@@ -8,9 +8,9 @@ const QUIET_FPS := 10 # session-avatars spike S1: 5 fps made the sleep breathing
 ## screen. A sleeping avatar that moves (for example travelling to another
 ## display) keeps the frame rate up, or it would walk at the quiet rate.
 ## `balloon_open`: a buddy shows a balloon (balloons-and-speech D10).
-static func is_quiet(content_visible: bool, avatars: Array, debug_mode: bool, field_open: bool,
+static func is_quiet(content_visible: bool, avatars: Array, debug_mode: bool,
 		pointer_on_strip: bool, balloon_open: bool) -> bool:
-	if debug_mode or field_open or pointer_on_strip:
+	if debug_mode or pointer_on_strip:
 		return false
 	if not content_visible:
 		return true

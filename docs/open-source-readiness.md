@@ -92,19 +92,19 @@ fix before publishing, because they are what an experienced reviewer will notice
 
 ### H1. Developer tooling and debug features ship to users (verified)
 
-- `godot/addons/godot_ai/` is excluded neither from the export (`export_presets.cfg:11` excludes
-  only `tests/*, tools/*`) nor from autoloads (`project.godot:34`). The 1,447-line helper runs
-  `_process` every frame and calls `OS.add_logger` (`game_helper.gd:131,157`) in every user's app.
-  It says it stays idle without a debugger, so this is hygiene, not a privacy leak.
-- `docs/codebase-audit.md:115,585` claims the addon is "stripped on export". That is wrong.
+- `godot/addons/godot_ai/` is not excluded from the export (`export_presets.cfg:11` excludes only
+  `tests/*, tools/*`), so its files (about 1.4 MB of the 2.4 MB pack) ship in every user's app.
+  Its autoload does not run there: the addon's own export plugin removes it at export. *(Corrected
+  during group 2: an earlier version of this report said the autoload ran in the app.)*
+- `docs/codebase-audit.md:115,585` says the addon is "stripped on export". That is only half true:
+  the autoload is removed, the files are not.
 - The end-user menu has "Debug regions" (`menu_bar.gd:50`). It turns on a debug panel and a
   "Type here (debug)" avatar item, which opens a field still marked
   "Temporary debug text field (task 4.4)" that prints whatever is typed
   (`debug_text_field.gd:2,17`).
 - The preview scenes in `godot/characters/monster/*_preview.tscn` are exported too.
 
-**Fix:** exclude the addon and preview scenes from the export, and keep its autoload out of
-release builds (for example, register it from the editor plugin only). Show the debug items only
+**Fix:** exclude the addon and preview scenes from the export. Show the debug items only
 when `OS.is_debug_build()`, and remove the temporary text field.
 
 ### H2. The Godot test runner can report a false pass (verified)

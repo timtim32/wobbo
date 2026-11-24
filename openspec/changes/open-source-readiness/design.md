@@ -38,6 +38,8 @@ The addon stays committed, because the editor workflow depends on it and removin
 
 Record the outcome here.
 
+**Result S1 (2026-11-24):** the addon already strips its own autoload at export: `addons/godot_ai/export/mcp_export_plugin.gd` removes `autoload/_mcp_game_helper` in `_export_begin`, and a baseline release export has no `_mcp_game_helper` in its settings. What did ship were the addon's files (701 path strings in the pack) and the preview scenes. With `addons/godot_ai/*` and `characters/monster/*_preview.*` in `exclude_filter`, the pack shrinks from 2.36 MB to 0.95 MB. The only `godot_ai` string left is `plugin.cfg` in the editor-plugin list, which a game run ignores. The exported app starts without autoload errors. No fallback is needed: `project.godot` stays as it is.
+
 *Alternative rejected:* git-ignoring the addon and asking contributors to install it. It would break the editor run for everyone who doesn't, and the autoload line would point at a missing file.
 
 ### D2. Debug items only in debug builds

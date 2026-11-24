@@ -112,7 +112,7 @@ Autoloads (project.godot)
   Overlay   scripts/autoload/overlay_controller.gd  strip windows, coordinates, regions, focus,
                                                     Dock tracking, headroom
   Bridge    scripts/autoload/bridge.gd → scripts/bridge/bridge_server.gd   WebSocket + SessionRegistry
-  (_mcp_game_helper from the godot_ai addon: editor tooling, stripped on export)
+  (_mcp_game_helper from the godot_ai addon: editor tooling; the addon's export plugin strips the autoload, and `exclude_filter` keeps its files out of the export)
 
 scenes/main.tscn (Main, scripts/main.gd)
   Content/Avatars   AvatarManager   one SessionAvatar per shown session; clicks, grabs, drops
@@ -582,7 +582,7 @@ Any time, each as its own tiny pull request, or not at all.
   The clip builder is long because it is data, and the README explains it.
 - **The native extension**, apart from optional dead-method removal. It is small and clear.
 - **`hooks.json` repetition.** The format requires one entry per hook event.
-- **The vendored `addons/godot_ai/`.** Not ours; its runtime autoload is stripped on export.
+- **The vendored `addons/godot_ai/`.** Not ours; its export plugin strips the runtime autoload, and the export preset leaves its files out.
 - **Public `Overlay` and `Bridge` method names.** They are used across scripts, in tests, and in
   the `game_eval` verification steps of the OpenSpec tasks. No renames.
 - **Polling loops** (layout every second, pointer every frame, Dock frame near the bottom edge,

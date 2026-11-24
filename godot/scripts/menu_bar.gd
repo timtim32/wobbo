@@ -47,8 +47,9 @@ func _ready() -> void:
 	_menu.add_item("Connect to Claude Code…", Item.CLAUDE) # standalone-app D9
 	_menu.add_check_item("Open at Login", Item.LOGIN) # standalone-app D7
 	_menu.add_separator()
-	_menu.add_check_item("Debug regions", Item.DEBUG_REGIONS)
-	_menu.add_separator()
+	if Settings.debug_build: # open-source-readiness D2
+		_menu.add_check_item("Debug regions", Item.DEBUG_REGIONS)
+		_menu.add_separator()
 	_menu.add_item("Quit %s" % ProjectSettings.get_setting("application/config/name", "Wobbo"), Item.QUIT)
 	_menu.id_pressed.connect(_on_id_pressed)
 	menu = get_path_to(_menu)
@@ -84,7 +85,8 @@ func _make_icon_template() -> void:
 func _sync() -> void:
 	_menu.set_item_text(_menu.get_item_index(Item.TOGGLE_VISIBLE),
 		"Hide Wobbos" if Settings.overlay_visible else "Show Wobbos")
-	_menu.set_item_checked(_menu.get_item_index(Item.DEBUG_REGIONS), Settings.debug_regions)
+	if Settings.debug_build:
+		_menu.set_item_checked(_menu.get_item_index(Item.DEBUG_REGIONS), Settings.debug_regions)
 	_menu.set_item_checked(_menu.get_item_index(Item.SHOW_NAMES), Settings.show_names)
 	_menu.set_item_text(_menu.get_item_index(Item.DEMO), "Stop Demo" if _demo and _demo.running else "Play Demo")
 	_rebuild_screens()
