@@ -34,9 +34,42 @@ class Session:
 	var pending: Array[String] = []
 
 
-## Pending request: {id, session_id, kind, text, choices, allow_text, owner, timeout_s,
-## added_msec}. timeout_s is how long the asker waits (0 when unknown).
-var requests: Dictionary = {}
+## A pending question or permission prompt, waiting for the user's answer.
+class Request:
+	extends RefCounted
+	var id: String
+	var session_id: String
+	var kind: String # Protocol.REQUEST_QUESTION or Protocol.REQUEST_PERMISSION
+	var text: String
+	var choices: Array[String] = []
+	var allow_text: bool
+	var owner: int # the connection that asked; -1 for a request from inside the app
+	var timeout_s: int # how long the asker waits; 0 when unknown
+	var added_msec := 0 # set by add_request, for the time-left bar (balloons-and-speech D4)
+
+	func _init(p_id: String, p_session_id: String, p_kind := Protocol.REQUEST_QUESTION, p_text := "",
+			p_choices: Array = [], p_allow_text := false, p_owner := -1, p_timeout_s := 0) -> void:
+		id = p_id
+		session_id = p_session_id
+		kind = p_kind
+		text = p_text
+		for choice: Variant in p_choices:
+			choices.append(String(choice))
+		allow_text = p_allow_text
+		owner = p_owner
+		timeout_s = p_timeout_s
+
+	## A request from a received `request` frame (bridge/PROTOCOL.md).
+	static func from_message(msg: Dictionary, p_session_id: String, p_owner: int) -> Request:
+		var raw_choices: Variant = msg.get("choices", [])
+		return Request.new(String(msg.get("id", "")), p_session_id,
+			String(msg.get("kind", Protocol.REQUEST_QUESTION)), String(msg.get("text", "")),
+			raw_choices if raw_choices is Array else [], bool(msg.get("allow_text", false)), p_owner,
+			int(msg.get("timeout_s", 0)))
+
+
+## Pending requests by id.
+var requests: Dictionary[String, Request] = {}
 var _sessions: Dictionary = {} # id -> Session
 
 
@@ -152,12 +185,11 @@ func set_message(session_id: String, text: String, now_msec: int) -> bool:
 
 
 ## Adds a pending request; the session goes to "waiting".
-func add_request(request: Dictionary, now_msec: int) -> bool:
-	var s: Session = _sessions.get(String(request.session_id))
-	if s == null or requests.has(request.id):
+func add_request(request: Request, now_msec: int) -> bool:
+	var s: Session = _sessions.get(request.session_id)
+	if s == null or request.id.is_empty() or requests.has(request.id):
 		return false
-	request["timeout_s"] = int(request.get("timeout_s", 0))
-	request["added_msec"] = now_msec # for the time-left bar (balloons-and-speech D4)
+	request.added_msec = now_msec
 	requests[request.id] = request
 	if s.pending.is_empty():
 		s.state_before_wait = s.state
@@ -167,13 +199,13 @@ func add_request(request: Dictionary, now_msec: int) -> bool:
 	return true
 
 
-## Removes a pending request (answered, dismissed or cancelled). Returns it, or {}.
-func remove_request(id: String) -> Dictionary:
-	var request: Dictionary = requests.get(id, {})
-	if request.is_empty():
-		return {}
+## Removes a pending request (answered, dismissed or cancelled). Returns it, or null.
+func remove_request(id: String) -> Request:
+	var request: Request = requests.get(id)
+	if request == null:
+		return null
 	requests.erase(id)
-	var s: Session = _sessions.get(String(request.session_id))
+	var s: Session = _sessions.get(request.session_id)
 	if s:
 		s.pending.erase(id)
 		if s.pending.is_empty() and s.state == Protocol.STATE_WAITING:
@@ -183,17 +215,17 @@ func remove_request(id: String) -> Dictionary:
 
 
 ## Removes every request owned by `owner` (a connection that closed).
-func remove_requests_of(owner: int) -> Array[Dictionary]:
-	var removed: Array[Dictionary] = []
+func remove_requests_of(owner: int) -> Array[Request]:
+	var removed: Array[Request] = []
 	for id: String in requests.keys():
-		if int(requests[id].get("owner", -1)) == owner:
+		if requests[id].owner == owner:
 			removed.append(remove_request(id))
 	return removed
 
 
-func requests_of(session_id: String) -> Array[Dictionary]:
-	var list: Array[Dictionary] = []
-	for request: Dictionary in requests.values():
+func requests_of(session_id: String) -> Array[Request]:
+	var list: Array[Request] = []
+	for request: Request in requests.values():
 		if request.session_id == session_id:
 			list.append(request)
 	return list
@@ -255,7 +287,7 @@ static func pretty_client_name(client_name: String) -> String:
 
 ## Removes sessions that ended a while ago or went silent. Returns their ids;
 ## the open requests of those sessions are appended to `dropped_requests`.
-func tick(now_msec: int, dropped_requests: Array[Dictionary] = []) -> Array[String]:
+func tick(now_msec: int, dropped_requests: Array[Request] = []) -> Array[String]:
 	var removed: Array[String] = []
 	for id: String in _sessions.keys():
 		var s: Session = _sessions[id]

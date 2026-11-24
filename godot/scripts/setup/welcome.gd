@@ -10,6 +10,7 @@ const ClaudeSetup := preload("res://scripts/setup/claude_setup.gd")
 const Plan := preload("res://scripts/core/claude_setup_plan.gd")
 const MessagePolicy := preload("res://scripts/core/message_policy.gd")
 const TrailerMode := preload("res://scripts/core/trailer_mode.gd")
+const SessionRegistry := preload("res://scripts/core/session_registry.gd")
 
 const INFO := {"id": "wobbo:welcome", "agent": "wobbo", "project_dir": "/Wobbo"}
 const CONNECT := "Connect to Claude Code"
@@ -152,8 +153,8 @@ static func _connect_result_text(result: Dictionary) -> String:
 	return "Connecting to Claude Code failed: %s" % result.message
 
 
-func _on_answered(request: Dictionary, _status: String, choice: String, _text: String) -> void:
-	if String(request.id) != _pending:
+func _on_answered(request: SessionRegistry.Request, _status: String, choice: String, _text: String) -> void:
+	if request.id != _pending:
 		return
 	_pending = ""
 	if choice == CONNECT or choice == TRY_AGAIN:

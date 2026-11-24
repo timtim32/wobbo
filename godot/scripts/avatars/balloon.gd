@@ -10,6 +10,7 @@ extends PanelContainer
 const Layout := preload("res://scripts/core/balloon_layout.gd")
 const NameLabel := preload("res://scripts/avatars/name_label.gd")
 const Protocol := preload("res://scripts/bridge/protocol.gd")
+const SessionRegistry := preload("res://scripts/core/session_registry.gd")
 
 const BODY_PT := 13.0
 const HEADER_PT := 11.0
@@ -151,10 +152,10 @@ func show_content(content: Dictionary) -> void:
 	_release_field()
 	_key = key
 	_content = content
-	var request: Dictionary = content.get("request", {})
-	var asks := not request.is_empty()
-	var is_permission := asks and String(request.kind) == Protocol.REQUEST_PERMISSION
-	_body.text = String(request.text) if asks else String(content.get("text", ""))
+	var request: SessionRegistry.Request = content.get("request")
+	var asks := request != null
+	var is_permission := asks and request.kind == Protocol.REQUEST_PERMISSION
+	_body.text = request.text if asks else String(content.get("text", ""))
 	var asked: bool = content.get("type") == &"asked"
 	var note := []
 	if asked:
@@ -175,18 +176,17 @@ func show_content(content: Dictionary) -> void:
 		_buttons.remove_child(child)
 		child.queue_free()
 	if asks:
-		var choices: Array = request.get("choices", [])
+		var choices: Array[String] = request.choices
 		if is_permission and choices.is_empty():
 			choices = ["allow", "deny"]
-		for choice in choices:
-			var value := String(choice)
+		for value in choices:
 			var label := value.capitalize() if is_permission else value
 			_buttons.add_child(_button(label, is_permission and value == "allow",
-				func() -> void: _answer(String(request.id), value, "")))
+				func() -> void: _answer(request.id, value, "")))
 	_buttons.visible = _buttons.get_child_count() > 0
-	_field.visible = asks and bool(request.get("allow_text", false))
+	_field.visible = asks and request.allow_text
 	_field.text = ""
-	_bar.visible = asks and int(request.get("timeout_s", 0)) > 0
+	_bar.visible = asks and request.timeout_s > 0
 	_body.max_lines_visible = -1
 	reset_size()
 
@@ -279,11 +279,11 @@ func _process(_delta: float) -> void:
 
 ## The time left before the asker gives up, as a shrinking bar.
 func _draw_bar() -> void:
-	var request: Dictionary = _content.get("request", {})
-	var timeout_ms := int(request.get("timeout_s", 0)) * 1000
-	if timeout_ms <= 0:
+	var request: SessionRegistry.Request = _content.get("request")
+	if request == null or request.timeout_s <= 0:
 		return
-	var left := 1.0 - float(Time.get_ticks_msec() - int(request.get("added_msec", 0))) / float(timeout_ms)
+	var timeout_ms := request.timeout_s * 1000
+	var left := 1.0 - float(Time.get_ticks_msec() - request.added_msec) / float(timeout_ms)
 	var r := Rect2(Vector2.ZERO, _bar.size)
 	_bar.draw_rect(r, Color(0.9, 0.91, 0.93))
 	_bar.draw_rect(Rect2(r.position, Vector2(r.size.x * clampf(left, 0.0, 1.0), r.size.y)), _accent)
@@ -310,11 +310,16 @@ func _on_close() -> void:
 		return
 	if is_request():
 		_release_field()
-		messages.dismiss(String(_content.request.id))
+		messages.dismiss(_request_id())
 	elif is_asked():
 		messages.close_asked(session_id)
 	else:
 		messages.close_message(session_id)
+
+
+func _request_id() -> String:
+	var request: SessionRegistry.Request = _content.get("request")
+	return request.id if request else ""
 
 
 func _answer(request_id: String, choice: String, text: String) -> void:
@@ -338,7 +343,7 @@ func _on_field_input(event: InputEvent) -> void:
 func _on_field_submitted(text: String) -> void:
 	if text.strip_edges().is_empty() or not is_request():
 		return
-	_answer(String(_content.request.id), "", text.strip_edges())
+	_answer(_request_id(), "", text.strip_edges())
 
 
 func _release_field() -> void:

@@ -68,14 +68,13 @@ func test_first_line_is_cut() -> void:
 
 
 func test_requests_show_also_with_speech_only() -> void:
-	var q := {"kind": "question", "text": "Deploy now?"}
-	var p := Policy.for_request(q, "api", "speech")
+	var p := Policy.for_request("question", "Deploy now?", "api", "speech")
 	assert_eq([p.show, p.speak, p.spoken], [true, true, "api asks: Deploy now?"])
-	p = Policy.for_request(q, "api", "balloons")
+	p = Policy.for_request("question", "Deploy now?", "api", "balloons")
 	assert_eq([p.show, p.speak], [true, false])
-	p = Policy.for_request({"kind": "permission", "text": "Bash: rm -rf build"}, "api", "both")
+	p = Policy.for_request("permission", "Bash: rm -rf build", "api", "both")
 	assert_eq(p.spoken, "api asks permission to use Bash", "the command itself is not read aloud")
-	assert_false(Policy.for_request(q, "api", "off").show)
+	assert_false(Policy.for_request("question", "Deploy now?", "api", "off").show)
 
 
 func test_menu_items() -> void:

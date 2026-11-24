@@ -8,11 +8,11 @@ signal session_added(session_id: String)
 signal session_changed(session_id: String)
 signal session_removed(session_id: String)
 signal message_received(session_id: String, text: String)
-signal request_added(request: Dictionary)
-signal request_removed(request: Dictionary)
+signal request_added(request: SessionRegistry.Request)
+signal request_removed(request: SessionRegistry.Request)
 ## A request was answered or dismissed through answer_request(), after
 ## request_removed. Lets the app answer its own local requests (the welcome).
-signal request_answered(request: Dictionary, status: String, choice: String, text: String)
+signal request_answered(request: SessionRegistry.Request, status: String, choice: String, text: String)
 ## An event was applied to a session, also while a request keeps it waiting
 ## (balloons-and-speech D4). `kind` is the protocol's event kind.
 signal session_event(session_id: String, kind: String, data: Dictionary)
@@ -106,7 +106,7 @@ func _process(delta: float) -> void:
 	_tick_left -= delta
 	if _tick_left <= 0.0:
 		_tick_left = TICK_SEC
-		var dropped: Array[Dictionary] = []
+		var dropped: Array[SessionRegistry.Request] = []
 		var removed := registry.tick(Time.get_ticks_msec(), dropped)
 		for request in dropped:
 			request_removed.emit(request)
@@ -193,13 +193,8 @@ func _handle(id: int, text: String, now_msec: int) -> void:
 			_finish_hook(id)
 		"request":
 			var info: Dictionary = _resolve_session(c, msg, now_msec)
-			var choices: Array = msg.get("choices", []) if typeof(msg.get("choices")) == TYPE_ARRAY else []
-			var request := {"id": String(msg.get("id", "")), "session_id": info.id,
-				"kind": String(msg.get("kind", Protocol.REQUEST_QUESTION)), "text": String(msg.get("text", "")),
-				"choices": choices.map(func(x: Variant) -> String: return String(x)),
-				"allow_text": bool(msg.get("allow_text", false)), "owner": id,
-				"timeout_s": int(msg.get("timeout_s", 0))}
-			if not request.id.is_empty() and registry.add_request(request, now_msec):
+			var request := SessionRegistry.Request.from_message(msg, String(info.id), id)
+			if registry.add_request(request, now_msec):
 				request_added.emit(request)
 				session_changed.emit(info.id)
 		"cancel":
@@ -232,9 +227,7 @@ func local_event(info: Dictionary, kind: String, data := {}) -> void:
 ## permission prompts and text answers).
 func local_request(session_id: String, request_id: String, text: String, choices: Array,
 		kind := Protocol.REQUEST_QUESTION, allow_text := false, timeout_s := 0) -> bool:
-	var request := {"id": request_id, "session_id": session_id, "kind": kind,
-		"text": text, "choices": choices.map(func(x: Variant) -> String: return String(x)),
-		"allow_text": allow_text, "owner": -1, "timeout_s": timeout_s}
+	var request := SessionRegistry.Request.new(request_id, session_id, kind, text, choices, allow_text, -1, timeout_s)
 	if not registry.add_request(request, Time.get_ticks_msec()):
 		return false
 	request_added.emit(request)
@@ -313,9 +306,9 @@ func _on_closed(id: int) -> void:
 		session_changed.emit(request.session_id)
 
 
-func _remove_request(request_id: String) -> Dictionary:
+func _remove_request(request_id: String) -> SessionRegistry.Request:
 	var request := registry.remove_request(request_id)
-	if not request.is_empty():
+	if request:
 		request_removed.emit(request)
 		session_changed.emit(request.session_id)
 	return request
@@ -324,9 +317,9 @@ func _remove_request(request_id: String) -> Dictionary:
 ## Sends the user's answer to the agent that asked (status "answered" or "dismissed").
 func answer_request(request_id: String, choice := "", text := "", status := "answered") -> bool:
 	var request := _remove_request(request_id)
-	if request.is_empty():
+	if request == null:
 		return false
-	_send(int(request.owner), {"type": "answer", "id": request_id, "status": status,
+	_send(request.owner, {"type": "answer", "id": request_id, "status": status,
 		"choice": choice, "text": text})
 	request_answered.emit(request, status, choice, text)
 	return true

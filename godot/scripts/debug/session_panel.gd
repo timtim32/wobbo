@@ -7,6 +7,7 @@ extends PanelContainer
 ## here or in a balloon removes the request from both.
 
 const Protocol := preload("res://scripts/bridge/protocol.gd")
+const SessionRegistry := preload("res://scripts/core/session_registry.gd")
 
 const REGION_ID := &"session_panel"
 const WIDTH_PT := 360.0
@@ -87,17 +88,17 @@ func _add_session(s) -> void:
 		_add_request(request)
 
 
-func _add_request(request: Dictionary) -> void:
+func _add_request(request: SessionRegistry.Request) -> void:
 	var box := VBoxContainer.new()
 	var prefix := "Permission: " if request.kind == Protocol.REQUEST_PERMISSION else "Question: "
-	box.add_child(_label(prefix + String(request.text), 12, Color(1, 0.9, 0.5)))
+	box.add_child(_label(prefix + request.text, 12, Color(1, 0.9, 0.5)))
 	var row := HBoxContainer.new()
 	row.add_theme_constant_override("separation", int(Overlay.points_to_px(4)))
-	var choices: Array = request.choices
+	var choices: Array[String] = request.choices
 	if request.kind == Protocol.REQUEST_PERMISSION and choices.is_empty():
 		choices = ["allow", "deny"]
 	for choice in choices:
-		row.add_child(_button(String(choice), func() -> void: Bridge.answer_request(request.id, String(choice))))
+		row.add_child(_button(choice, func() -> void: Bridge.answer_request(request.id, choice)))
 	row.add_child(_button("Dismiss", func() -> void: Bridge.dismiss_request(request.id)))
 	box.add_child(row)
 	if request.allow_text:

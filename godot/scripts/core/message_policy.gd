@@ -99,11 +99,12 @@ static func for_asked(question: String, session_name: String, mode: String) -> D
 
 ## A request is always shown while requests are accepted, also with output
 ## Speech, because it can only be answered in its balloon (spec "Spoken output").
-static func for_request(request: Dictionary, session_name: String, mode: String) -> Dictionary:
+## `kind` and `text` are the request's (a question or a permission prompt).
+static func for_request(kind: String, text: String, session_name: String, mode: String) -> Dictionary:
 	var flags := output_flags(mode)
-	var spoken := "%s asks: %s" % [session_name, String(request.get("text", ""))]
-	if String(request.get("kind", "")) == "permission":
-		spoken = "%s asks permission to use %s" % [session_name, tool_of(String(request.get("text", "")))]
+	var spoken := "%s asks: %s" % [session_name, text]
+	if kind == "permission":
+		spoken = "%s asks permission to use %s" % [session_name, tool_of(text)]
 	return {"show": mode_of(mode) != OFF, "speak": flags.speech, "spoken": spoken}
 
 

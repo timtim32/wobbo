@@ -60,8 +60,8 @@ func content_for(session_id: String, now_msec: int) -> Dictionary:
 		return {}
 	var current := q.current(now_msec)
 	if current.get("type") == &"request":
-		var request: Dictionary = Bridge.registry.requests.get(current.id, {})
-		if request.is_empty():
+		var request: SessionRegistry.Request = Bridge.registry.requests.get(current.id)
+		if request == null:
 			q.remove_request(current.id) # already gone before its balloon came up
 			return content_for(session_id, now_msec)
 		current["request"] = request
@@ -154,21 +154,20 @@ func _on_asked(s: SessionRegistry.Session, question: String, data: Dictionary) -
 			String(data.get("tool", "")), until)
 
 
-func _on_request_added(request: Dictionary) -> void:
+func _on_request_added(request: SessionRegistry.Request) -> void:
 	if not _accepts_requests():
-		_hand_back.call_deferred(String(request.id)) # not while the Bridge is still adding it
+		_hand_back.call_deferred(request.id) # not while the Bridge is still adding it
 		return
-	var session_id := String(request.session_id)
-	_queue(session_id).add_request(String(request.id))
-	var plan := Policy.for_request(request, _name_of(session_id), Settings.messages)
+	_queue(request.session_id).add_request(request.id)
+	var plan := Policy.for_request(request.kind, request.text, _name_of(request.session_id), Settings.messages)
 	if plan.speak:
 		speech.speak(plan.spoken)
 
 
-func _on_request_removed(request: Dictionary) -> void:
-	var q: BalloonQueue = _queues.get(String(request.session_id))
+func _on_request_removed(request: SessionRegistry.Request) -> void:
+	var q: BalloonQueue = _queues.get(request.session_id)
 	if q:
-		q.remove_request(String(request.id))
+		q.remove_request(request.id)
 
 
 ## Shows and speaks a plan from MessagePolicy. A balloon only for a buddy on

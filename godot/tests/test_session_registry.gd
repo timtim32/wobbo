@@ -57,20 +57,20 @@ func test_out_of_order_events_are_ignored() -> void:
 
 func test_request_waits_and_restores_state() -> void:
 	reg.apply_event(CC, "tool_start", {"tool": "Bash"}, 1, 100)
-	assert_true(reg.add_request({"id": "r1", "session_id": "s1", "kind": "question", "owner": 7}, 110))
+	assert_true(reg.add_request(SessionRegistry.Request.new("r1", "s1", "question", "", [], false, 7), 110))
 	assert_eq(reg.get_session("s1").state, &"waiting")
 	reg.apply_event(CC, "tool_end", {}, 2, 120)
 	assert_eq(reg.get_session("s1").state, &"waiting", "stays waiting while a request is open")
-	var removed: Dictionary = reg.remove_request("r1")
-	assert_eq(removed.get("id"), "r1")
+	var removed := reg.remove_request("r1")
+	assert_eq(removed.id, "r1")
 	assert_eq(reg.get_session("s1").state, &"thinking", "returns to the latest state")
-	assert_eq(reg.remove_request("r1"), {}, "removing twice is a no-op")
+	assert_eq(reg.remove_request("r1"), null, "removing twice is a no-op")
 
 
 func test_requests_of_a_closed_connection_are_removed() -> void:
 	reg.apply_event(CC, "prompt", {}, 1, 100)
-	reg.add_request({"id": "r1", "session_id": "s1", "owner": 7}, 110)
-	reg.add_request({"id": "r2", "session_id": "s1", "owner": 8}, 110)
+	reg.add_request(SessionRegistry.Request.new("r1", "s1", "question", "", [], false, 7), 110)
+	reg.add_request(SessionRegistry.Request.new("r2", "s1", "question", "", [], false, 8), 110)
 	var removed := reg.remove_requests_of(7)
 	assert_eq(removed.size(), 1)
 	assert_eq(reg.requests.keys(), ["r2"])
@@ -86,12 +86,12 @@ func test_ended_session_is_removed_after_linger() -> void:
 
 func test_requests_of_a_removed_session_are_reported() -> void:
 	reg.apply_event(CC, "prompt", {}, 1, 100)
-	reg.add_request({"id": "r1", "session_id": "s1", "owner": 7}, 110)
+	reg.add_request(SessionRegistry.Request.new("r1", "s1", "question", "", [], false, 7), 110)
 	reg.apply_event(CC, "session_end", {"reason": "other"}, 2, 1000)
-	var dropped: Array[Dictionary] = []
+	var dropped: Array[SessionRegistry.Request] = []
 	assert_eq(reg.tick(1000 + 5000, dropped), ["s1"] as Array[String])
 	assert_eq(dropped.size(), 1, "one request dropped")
-	assert_eq(dropped[0].get("id"), "r1")
+	assert_eq(dropped[0].id, "r1")
 	assert_true(reg.requests.is_empty())
 
 
@@ -193,7 +193,7 @@ func test_input_wait_out_of_order_is_ignored() -> void:
 
 func test_input_wait_with_a_pending_request() -> void:
 	reg.apply_event(CC, "tool_start", {"tool": "Bash"}, 1, 100)
-	reg.add_request({"id": "r1", "session_id": "s1", "kind": "permission", "text": "", "choices": [], "allow_text": false, "owner": 1}, 110)
+	reg.add_request(SessionRegistry.Request.new("r1", "s1", "permission", "", [], false, 1), 110)
 	reg.apply_event(CC, "input_wait", {"reason": "permission_prompt"}, 2, 120)
 	assert_eq(reg.get_session("s1").state, &"waiting")
 	reg.remove_request("r1")
@@ -229,10 +229,10 @@ func test_unknown_link_schemes_are_ignored() -> void:
 
 func test_request_keeps_timeout_and_arrival() -> void:
 	reg.apply_event(CC, "session_start", {}, 1, 100)
-	reg.add_request({"id": "r1", "session_id": "s1", "kind": "permission", "owner": 7, "timeout_s": 20}, 500)
+	reg.add_request(SessionRegistry.Request.new("r1", "s1", "permission", "", [], false, 7, 20), 500)
 	assert_eq(reg.requests["r1"].timeout_s, 20)
 	assert_eq(reg.requests["r1"].added_msec, 500)
-	reg.add_request({"id": "r2", "session_id": "s1", "kind": "question", "owner": 7}, 600)
+	reg.add_request(SessionRegistry.Request.new("r2", "s1", "question", "", [], false, 7), 600)
 	assert_eq(reg.requests["r2"].timeout_s, 0, "unknown time-out")
 	assert_eq(reg.requests["r2"].added_msec, 600)
 

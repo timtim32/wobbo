@@ -202,7 +202,7 @@ func test_local_request_answer_is_dropped_safely() -> void:
 
 func test_answers_to_local_requests_are_reported() -> void:
 	var seen := []
-	server.request_answered.connect(func(r: Dictionary, status: String, choice: String, _t: String) -> void:
+	server.request_answered.connect(func(r: RefCounted, status: String, choice: String, _t: String) -> void:
 		seen.append([r.id, status, choice]))
 	server.local_event({"id": "wobbo:welcome", "agent": "wobbo", "project_dir": "/Wobbo"}, "session_start")
 	server.local_request("wobbo:welcome", "w1", "Connect?", ["Connect", "Not now"])

@@ -62,7 +62,7 @@ Commands used below:
 
 - [x] 8.1 Send the real app version in `welcome` (read from project settings) instead of `APP_VERSION := "0.1.0"`. Verify: a bridge-server test checks the version.
 - [x] 8.2 Replace the `&"working"` literals in `avatar_mood.gd` with `Protocol.STATE_WORKING`. Verify: `git grep -n '&"working"' godot/scripts/core/avatar_mood.gd` finds only clip names; the Godot suite passes.
-- [ ] 8.3 Add a small `Request` class next to `Session` in `session_registry.gd`, built in one place, and emit `request_removed` for the requests of an ended session. Verify: a registry test; the workaround comment in `messages.gd` is removed.
+- [x] 8.3 Add a small `Request` class next to `Session` in `session_registry.gd`, built in one place, and emit `request_removed` for the requests of an ended session. Verify: a registry test; the workaround comment in `messages.gd` is removed.
 - [x] 8.4 Use `String::utf8` for app names in `mac_overlay.mm`, and remove the unused `dock_pid`. Rebuild the extension. Verify: `scons -C native` builds; clicking a Wobbo whose session runs in an app with a non-ASCII name logs the right name.
 - [x] 8.5 Rename leftover "buddy" names (`isBuddyTool`, comments, the PROTOCOL example, test temp prefixes). Add a dated comment on the intentional `ClaudeBuddy` migration fallbacks. Verify: bridge checks and the Godot suite pass; `git grep -n -i buddy` shows only the migration paths and archived OpenSpec text.
 - [ ] 8.6 Add `.github/ISSUE_TEMPLATE/` with a bug report and an idea template, if the user wants them (design, Open Questions). Verify: GitHub shows both when opening an issue.

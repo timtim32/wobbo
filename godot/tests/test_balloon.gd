@@ -2,6 +2,7 @@ extends "res://tests/base_test.gd"
 ## A balloon keeps to its height limit (balloons-and-speech design D6).
 
 const Balloon := preload("res://scripts/avatars/balloon.gd")
+const SessionRegistry := preload("res://scripts/core/session_registry.gd")
 
 var balloon: Balloon
 
@@ -45,8 +46,7 @@ func test_short_text_is_not_cut() -> void:
 
 func test_question_with_field_and_buttons() -> void:
 	balloon.show_content({"type": &"request", "id": "r1", "index": 1, "count": 2,
-		"request": {"id": "r1", "kind": "question", "text": "Deploy?", "choices": ["yes", "no"],
-			"allow_text": true, "timeout_s": 0, "added_msec": 0}})
+		"request": SessionRegistry.Request.new("r1", "s1", "question", "Deploy?", ["yes", "no"], true)})
 	_settle(200.0)
 	assert_eq((balloon.get("_buttons") as Container).get_child_count(), 2, "one button per choice")
 	assert_true((balloon.get("_field") as Control).visible, "text field")
@@ -56,8 +56,7 @@ func test_question_with_field_and_buttons() -> void:
 
 func test_permission_labels() -> void:
 	balloon.show_content({"type": &"request", "id": "p1", "index": 1, "count": 1,
-		"request": {"id": "p1", "kind": "permission", "text": "Bash: ls", "choices": ["allow", "deny"],
-			"allow_text": false, "timeout_s": 20, "added_msec": 0}})
+		"request": SessionRegistry.Request.new("p1", "s1", "permission", "Bash: ls", ["allow", "deny"], false, 1, 20)})
 	var labels := (balloon.get("_buttons") as Container).get_children().map(func(b): return b.text)
 	assert_eq(labels, ["Allow", "Deny"])
 	assert_true((balloon.get("_bar") as Control).visible, "time-left bar")
