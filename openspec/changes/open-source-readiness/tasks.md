@@ -37,10 +37,10 @@ Commands used below:
 
 ## 5. Licensing paperwork (H5)
 
-- [ ] 5.1 Write `THIRD_PARTY_NOTICES.md` (design D5) from the engine's `COPYRIGHT.txt`, godot-cpp, godot_ai, Baloo 2, Bun and the bridge's runtime dependencies in `bun.lock`. Verify: every component in the audit's licensing table is listed with its licence.
-- [ ] 5.2 Check the LGPL terms for JavaScriptCore in a Bun-compiled binary, and write the outcome in the notices. Report anything beyond a notice to the user. Verify: the notice states the outcome and its source.
-- [ ] 5.3 Copy the notices into `Wobbo.app/Contents/Resources/` in `tools/release.sh`. Verify: after `tools/release.sh build`, the file is inside the app.
-- [ ] 5.4 Name `godot/characters/monster/` (scenes and clips) and `godot/assets/monster/manifest.json` explicitly in `ARTWORK.md`, and add a short "Using your own art" note (what to replace, and the export script). Verify: every tracked file under `art/`, `godot/assets/`, `godot/characters/monster/` and `docs/images/` falls clearly under one of LICENSE, ARTWORK.md or a third-party licence.
+- [x] 5.1 Write `THIRD_PARTY_NOTICES.md` (design D5) from the engine's `COPYRIGHT.txt`, godot-cpp, godot_ai, Baloo 2, Bun and the bridge's runtime dependencies in `bun.lock`. Verify: every component in the audit's licensing table is listed with its licence.
+- [x] 5.2 Check the LGPL terms for JavaScriptCore in a Bun-compiled binary, and write the outcome in the notices. Report anything beyond a notice to the user. Verify: the notice states the outcome and its source.
+- [x] 5.3 Copy the notices into `Wobbo.app/Contents/Resources/` in `tools/release.sh`. Verify: after `tools/release.sh build`, the file is inside the app.
+- [x] 5.4 Name `godot/characters/monster/` (scenes and clips) and `godot/assets/monster/manifest.json` explicitly in `ARTWORK.md`, and add a short "Using your own art" note (what to replace, and the export script). Verify: every tracked file under `art/`, `godot/assets/`, `godot/characters/monster/` and `docs/images/` falls clearly under one of LICENSE, ARTWORK.md or a third-party licence.
 - [ ] 5.5 Manual check: the user reads `ARTWORK.md` and `THIRD_PARTY_NOTICES.md`, and agrees they say what they intend.
 
 ## 6. Contributor workflow (H6)

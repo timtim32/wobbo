@@ -76,6 +76,8 @@ For an incomplete description the bridge sends no permission request to the app 
 
 `tools/release.sh` copies it into `Wobbo.app/Contents/Resources/`. How the LGPL terms for JavaScriptCore in a Bun single-file binary are met is checked and written down in the file. If the terms need more (for example a written offer or relinkable objects), that is reported to the user before release.
 
+**Result (2026-11-24):** Bun's licensing page names two LGPL parts that Bun links statically: JavaScriptCore and WebKit (LGPL 2) and tinycc (LGPL 2.1). Bun publishes its WebKit source at github.com/oven-sh/webkit, with build steps. Because the bridge's own source is public, anyone can rebuild `wobbo-bridge` with a changed Bun, which covers relinking. So a notice, both licence texts (`licenses/`, also in the app) and the source pointer are enough. No written offer or object files are needed. This is a reading of the licences, not legal advice.
+
 ### D6. Spec deltas and standalone-app
 
 This change modifies only the "Debug regions toggle" requirement of `menu-bar-control`. The "Menu bar icon" requirement, which lists "Debug regions" among the items, is also being modified by `standalone-app`. To avoid two conflicting deltas, this change leaves it alone. Whichever of the two changes is archived second updates that scenario, so that it no longer lists "Debug regions".

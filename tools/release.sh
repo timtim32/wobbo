@@ -79,6 +79,20 @@ make_dmg() {
 	rm -rf "$staging"
 }
 
+# Puts Wobbo's own licences and every third-party notice in the app, under
+# Contents/Resources/Licenses (open-source-readiness D5).
+notices() {
+	local dir="$APP/Contents/Resources/Licenses"
+	mkdir -p "$dir"
+	cp "$ROOT/LICENSE" "$ROOT/ARTWORK.md" "$ROOT/THIRD_PARTY_NOTICES.md" "$ROOT"/licenses/*.txt "$dir/"
+	cp "$ROOT/godot/assets/fonts/OFL.txt" "$dir/Baloo2-OFL.txt"
+	cp "$ROOT/native/godot-cpp/LICENSE.md" "$dir/godot-cpp-LICENSE.md"
+	"$GODOT" --headless --path "$ROOT/godot" --script res://tools/godot_notices.gd -- "--out=$dir/godot-engine.txt" \
+		>"$BUILD/notices.log" 2>&1
+	[ -s "$dir/godot-engine.txt" ] || { cat "$BUILD/notices.log" >&2; die "could not write the Godot notices"; }
+	(cd "$ROOT/bridge" && bun scripts/licenses.ts texts) >"$dir/wobbo-bridge-packages.txt"
+}
+
 build() {
 	local version="${1:-}" mode="release"
 	check_version "$version"
@@ -108,6 +122,9 @@ build() {
 	say "Claude Code plugin"
 	mkdir -p "$APP/$PLUGIN_DIR"
 	rsync -a --delete --exclude .DS_Store "$ROOT/bridge/plugin/" "$APP/$PLUGIN_DIR/"
+
+	say "Licences"
+	notices
 
 	say "Signing"
 	sign

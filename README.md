@@ -138,4 +138,5 @@ Pull requests are welcome too; see [CONTRIBUTING.md](CONTRIBUTING.md).
 ## License
 
 The source code is [MIT licensed](LICENSE). The Wobbo characters, artwork and
-name are not: see [ARTWORK.md](ARTWORK.md) for what you may do with them.
+name are not: see [ARTWORK.md](ARTWORK.md) for what you may do with them. Parts
+made by others keep their own licences: see [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md).
