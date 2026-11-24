@@ -1,5 +1,12 @@
 # Codebase audit
 
+> **Historical snapshot.** This audit was written on 2026-11-23, before the
+> project's history was restarted for its public release, so the commits it names
+> (such as `3f03baf`) are not in this repository. Its findings were worked off in
+> the archived OpenSpec change
+> [`codebase-cleanup`](../openspec/changes/archive/2026-11-23-codebase-cleanup/proposal.md).
+> The current review is [open-source-readiness.md](open-source-readiness.md).
+
 Date: 2026-11-23. Scope: everything first-party in the repository at commit `3f03baf`, after
 `dock-dodge`, `edges-first-slots`, `always-go-to-session` and `buddy-drag` were merged. Out of
 scope: the vendored Godot addon `godot/addons/godot_ai/` and the `native/godot-cpp` submodule.

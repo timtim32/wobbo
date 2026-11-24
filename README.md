@@ -93,8 +93,10 @@ After that, Wobbo opens like any other app.
 Everything stays on your Mac.
 
 - Wobbo only listens on `127.0.0.1` (your own computer) and checks a secret token that only your user account can read.
-- Speech uses the macOS system voice.
 - Wobbo itself doesn't send anything over the internet. The only exception is the Claude Code install page, which opens in your browser if you click that button.
+- **What it keeps.** Its settings, the token file and its log files are in `~/Library/Application Support/Wobbo/`. The logs name your sessions and project folders.
+- **What it shows and says.** A balloon shows what a session asks, including the command of a permission prompt. With speech on, questions are read aloud with the macOS system voice; for a permission prompt Wobbo only says which tool it is.
+- **What it changes.** Connecting installs Wobbo's plugin in Claude Code and adds Wobbo to Claude Desktop's settings; disconnecting removes both. **Open at Login** registers Wobbo with macOS as a login item. On its first start, Wobbo offers to move itself to Applications.
 
 ## Claude Desktop chats
 
@@ -127,6 +129,8 @@ Claude Desktop ─MCP──▶  (Bun, TS)                              (Godot 4.
   by a script.
 - **Every feature was planned** as an [OpenSpec](https://github.com/Fission-AI/OpenSpec)
   change: proposal, design decisions and tasks are in [`openspec/`](openspec/).
+  A code comment such as `(overlay-window D5)` names the change and the decision
+  it implements.
 
 To build and run it yourself, see [docs/DEVELOPMENT.md](docs/DEVELOPMENT.md).
 

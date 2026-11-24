@@ -52,10 +52,10 @@ Commands used below:
 
 ## 7. Docs for newcomers (H7)
 
-- [ ] 7.1 Add a "First hour" section at the top of `docs/DEVELOPMENT.md`: prerequisites, clone with submodules, import, tests, run. Verify: a fresh clone following only that section reaches a passing test run and a running app.
-- [ ] 7.2 Move the "The Wobbos" behaviour reference out of `DEVELOPMENT.md`, keeping a link. It goes into the matching specs, or a short `docs/behaviour.md`. Verify: no behaviour detail is lost; links resolve.
-- [ ] 7.3 Mark `docs/codebase-audit.md` as a historical snapshot at its top, with a link to the archived `codebase-cleanup` change. Verify: the first lines say so.
-- [ ] 7.4 Complete the README "Privacy" section: the log folder and what it holds, permission details in balloons and speech, the login item, and the move-to-Applications offer. Add one line explaining design references and `openspec/`. Verify: each statement matches the code paths named in the audit.
+- [x] 7.1 Add a "First hour" section at the top of `docs/DEVELOPMENT.md`: prerequisites, clone with submodules, import, tests, run. Verify: a fresh clone following only that section reaches a passing test run and a running app.
+- [x] 7.2 Move the "The Wobbos" behaviour reference out of `DEVELOPMENT.md`, keeping a link. It goes into the matching specs, or a short `docs/behaviour.md`. Verify: no behaviour detail is lost; links resolve.
+- [x] 7.3 Mark `docs/codebase-audit.md` as a historical snapshot at its top, with a link to the archived `codebase-cleanup` change. Verify: the first lines say so.
+- [x] 7.4 Complete the README "Privacy" section: the log folder and what it holds, permission details in balloons and speech, the login item, and the move-to-Applications offer. Add one line explaining design references and `openspec/`. Verify: each statement matches the code paths named in the audit.
 - [ ] 7.5 Manual check: someone who has not seen the project follows the README and "First hour", and reports where they got stuck.
 
 ## 8. Small drifts and polish (H8, optional)
