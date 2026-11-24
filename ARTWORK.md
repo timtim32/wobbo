@@ -34,6 +34,12 @@ distribute: replace the artwork with your own first.
 Wobbo or made by its author. Saying that your project is "based on Wobbo" is
 fine.
 
+## Third-party parts
+
+These keep their own licenses: `godot/addons/godot_ai/` (MIT, see its
+LICENSE), `native/godot-cpp` (MIT, git submodule) and the Baloo 2 font in
+`godot/assets/fonts/` (SIL Open Font License, see `OFL.txt` there).
+
 ## Questions
 
 For permission or anything else, [open an issue](https://github.com/timtim32/wobbo/issues).
