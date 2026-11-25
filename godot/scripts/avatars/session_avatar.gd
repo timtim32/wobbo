@@ -271,8 +271,17 @@ func _process(delta: float) -> void:
 		out.motion = &"none"
 	match out.motion:
 		&"walk_in":
-			if _walk_to(target, WALK_SPEED_PT * _speed_scale(), delta):
-				only_run = -1
+			if only_run >= 0:
+				# Still beyond the end it enters at: walk onto its own run first.
+				var run: Vector2 = Overlay.walkway.run_bounds(mini(only_run, Overlay.walkway.segments.size() - 1))
+				var inside := clampf(target, run.x + half, run.y - half)
+				if _walk_to(inside, WALK_SPEED_PT * _speed_scale(), delta) \
+						or (position.x - half >= run.x and position.x + half <= run.y):
+					only_run = -1
+			# Then like travelling, so a home display that changed meanwhile is
+			# reached over climb routes too (side-climb D2).
+			elif _travel(target, delta, WALK_SPEED_PT):
+				_route_side = null
 				mood.arrive()
 		&"travel":
 			if _travel(target, delta):
@@ -333,7 +342,7 @@ func _finish_frame(delta: float) -> void:
 
 ## One frame of travelling to walkway x `target` on the home display, over climb
 ## routes where the way leads; returns true on arrival.
-func _travel(target: float, delta: float) -> bool:
+func _travel(target: float, delta: float, speed := TRAVEL_SPEED_PT) -> bool:
 	var w: Walkway = Overlay.walkway
 	var from: int = w.index_at(position.x)
 	var to: int = Overlay.home_index()
@@ -343,7 +352,7 @@ func _travel(target: float, delta: float) -> bool:
 		return false
 	if step.has("side"):
 		_route_side = step.side
-	var there := _walk_to(step.x, TRAVEL_SPEED_PT * _speed_scale(), delta)
+	var there := _walk_to(step.x, speed * _speed_scale(), delta)
 	return there and from == to and is_equal_approx(step.x, target)
 
 
