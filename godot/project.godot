@@ -11,7 +11,7 @@ config_version=5
 [application]
 
 config/name="Wobbo"
-config/version="0.2.6"
+config/version="0.2.7"
 config/description="Desktop buddies that show what your Claude Code sessions are doing."
 run/main_scene="res://scenes/boot.tscn"
 config/use_custom_user_dir=true
