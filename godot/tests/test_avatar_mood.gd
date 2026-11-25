@@ -168,8 +168,8 @@ func test_work_switches_every_8_to_15_seconds_via_out_and_in() -> void:
 		assert_true(loops[i] != loops[i - 1], "never twice in a row: %s" % [loops])
 	for i in shown.size():
 		var c := String(shown[i])
-		if c.ends_with("_out") and i + 1 < shown.size() and String(shown[i + 1]) != "working":
-			assert_true(String(shown[i + 1]).ends_with("_in"), "after putting away, the next is taken: %s" % [shown])
+		if c.ends_with("_out") and i + 1 < shown.size() and not String(shown[i + 1]) in ["working", "walk"]:
+			assert_true(String(shown[i + 1]).ends_with("_in"), "after putting away, the next is taken (or a walk): %s" % [shown])
 
 
 func test_work_switch_timing() -> void:
@@ -209,3 +209,77 @@ func test_walking_drops_the_prop() -> void:
 	m.travel()
 	assert_eq(m.update(&"working", 0, 100).clip, &"walk")
 	assert_eq(m.work_clip(), &"", "the prop is gone while walking")
+
+
+# --- Walk breaks between ways of working (work-breaks D1, D2) -------------------
+
+## Runs `working` from t0 to t1 in 100 ms steps; returns [{clip, motion, t}] on each change.
+func _run_working_motions(m: Mood, t0: int, t1: int) -> Array:
+	var out := []
+	var t := t0
+	while t <= t1:
+		var o: Dictionary = m.update(&"working", t, t)
+		if out.is_empty() or out[-1].clip != o.clip or out[-1].motion != o.motion:
+			out.append({"clip": o.clip, "motion": o.motion, "t": t})
+		if String(o.clip).ends_with("_in") or String(o.clip).ends_with("_out"):
+			m.one_shot_finished(o.clip)
+		t += 100
+	return out
+
+
+func test_work_takes_short_walks_now_and_then() -> void:
+	for seed_value in 10:
+		var m := Mood.new(&"thinking", seed_value)
+		m.arrive()
+		var seen := _run_working_motions(m, 0, 240000)
+		assert_true(seen[0].motion == &"stand", "never starts with a walk (seed %d)" % seed_value)
+		var walks := 0
+		var stints := 0
+		for i in seen.size():
+			var c := String(seen[i].clip)
+			if seen[i].motion == &"stroll":
+				walks += 1
+				assert_eq(seen[i].clip, &"walk", "walks with the walk clip")
+				assert_true(stints >= 2 and stints <= 4, "a walk after 2-4 ways of working, got %d (seed %d)" % [stints, seed_value])
+				stints = 0
+				if i > 0:
+					var before := String(seen[i - 1].clip)
+					assert_true(before.ends_with("_out") or before == "working", "the prop is away before the walk: %s" % before)
+				if i + 1 < seen.size():
+					var length: int = seen[i + 1].t - seen[i].t
+					assert_true(length >= 2500 and length <= 3600, "a walk of about 3 s, got %d ms" % length)
+					assert_eq(seen[i + 1].motion, &"stand", "then back to work")
+			elif not (c.ends_with("_in") or c.ends_with("_out")):
+				stints += 1
+		assert_true(walks >= 3, "several walks in four minutes of work (seed %d): %d" % [seed_value, walks])
+
+
+func test_state_change_ends_the_walk() -> void:
+	var m := Mood.new(&"thinking", 1)
+	m.arrive()
+	var t := 0
+	while not m.on_break():
+		var o: Dictionary = m.update(&"working", t, t)
+		if String(o.clip).ends_with("_in") or String(o.clip).ends_with("_out"):
+			m.one_shot_finished(o.clip)
+		t += 100
+		assert_true(t < 200000, "a walk comes within a few minutes")
+		if t >= 200000:
+			return
+	assert_eq(m.update(&"done", t, t).clip, &"happy", "done during a walk: reacts at once")
+	assert_false(m.on_break())
+	assert_eq(m.update(&"working", t + 100, t + 100).motion, &"stand", "working again starts with work, not the old walk")
+
+
+func test_travelling_ends_the_walk() -> void:
+	var m := Mood.new(&"thinking", 2)
+	m.arrive()
+	var t := 0
+	while not m.on_break() and t < 200000:
+		var o: Dictionary = m.update(&"working", t, t)
+		if String(o.clip).ends_with("_in") or String(o.clip).ends_with("_out"):
+			m.one_shot_finished(o.clip)
+		t += 100
+	m.travel()
+	assert_eq(m.update(&"working", t, t).motion, &"travel")
+	assert_false(m.on_break(), "no walk left over after travelling")

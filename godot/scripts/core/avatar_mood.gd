@@ -23,6 +23,11 @@ const RESTING := [Protocol.STATE_IDLE, Protocol.STATE_DONE, Protocol.STATE_ERROR
 const WORK_CLIPS: Array[StringName] = [&"working", &"work_hammer", &"work_laptop", &"work_wrench", &"work_papers"]
 const WORK_SWITCH_MIN_MS := 8000
 const WORK_SWITCH_MAX_MS := 15000
+## A short walk around its spot after every few ways of working (work-breaks D1).
+const BREAK_MIN_MS := 2500
+const BREAK_MAX_MS := 3500
+const BREAK_AFTER_MIN := 2
+const BREAK_AFTER_MAX := 4
 
 var phase := &"entering" # entering, home, travelling, leaving
 var asleep := false
@@ -40,6 +45,9 @@ var _work_phase: StringName = &"" # in, loop or out
 var _work_until := 0
 var _work_next := false # pick the next way of working on the next update
 var _last_work: StringName = &""
+var _stints := 0 # ways of working since the last break
+var _break_after := 0 # stints before the next break (0: not drawn yet)
+var _break_until := -1 # end of the current walk break, or -1
 
 
 func _init(initial_state: StringName = &"idle", seed_value := 0) -> void:
@@ -141,8 +149,18 @@ func _work(state: StringName, now_msec: int) -> Dictionary:
 		return {"clip": _with_suffix("_out"), "motion": &"stand"}
 	if state != Protocol.STATE_WORKING:
 		_work_next = false
+		_end_breaks()
 		return {}
-	if _work_clip == &"" or _work_next:
+	if _break_until >= 0:
+		if now_msec < _break_until:
+			return {"clip": &"walk", "motion": &"stroll"}
+		_break_until = -1
+		_stints = 0
+		_break_after = 0
+		_pick_work(now_msec)
+	elif _work_clip == &"" or _work_next:
+		if _work_next and _break_due():
+			return _start_break(now_msec)
 		_pick_work(now_msec)
 	if _work_phase == &"in":
 		return {"clip": _with_suffix("_in"), "motion": &"stand"}
@@ -150,6 +168,8 @@ func _work(state: StringName, now_msec: int) -> Dictionary:
 		if _has_prop(_work_clip):
 			_work_phase = &"out"
 			return {"clip": _with_suffix("_out"), "motion": &"stand"}
+		if _break_due():
+			return _start_break(now_msec)
 		_pick_work(now_msec)
 		if _work_phase == &"in":
 			return {"clip": _with_suffix("_in"), "motion": &"stand"}
@@ -163,12 +183,42 @@ func _pick_work(now_msec: int) -> void:
 	_work_phase = &"in" if _has_prop(_work_clip) else &"loop"
 	_work_until = now_msec + _rng.randi_range(WORK_SWITCH_MIN_MS, WORK_SWITCH_MAX_MS)
 	_work_next = false
+	_stints += 1
 
 
 func _drop_work() -> void:
 	_work_clip = &""
 	_work_phase = &""
 	_work_next = false
+	_end_breaks()
+
+
+## True when enough ways of working have passed for a walk (work-breaks D1).
+func _break_due() -> bool:
+	if _break_after == 0:
+		_break_after = _rng.randi_range(BREAK_AFTER_MIN, BREAK_AFTER_MAX)
+	return _stints >= _break_after
+
+
+func _start_break(now_msec: int) -> Dictionary:
+	_work_clip = &""
+	_work_phase = &""
+	_work_next = false
+	_break_until = now_msec + _rng.randi_range(BREAK_MIN_MS, BREAK_MAX_MS)
+	return {"clip": &"walk", "motion": &"stroll"}
+
+
+## Forgets breaks and the stint count: the session stopped working, or the
+## avatar walks somewhere else (work-breaks D2).
+func _end_breaks() -> void:
+	_break_until = -1
+	_stints = 0
+	_break_after = 0
+
+
+## True during a walk break between ways of working.
+func on_break() -> bool:
+	return _break_until >= 0
 
 
 func _has_prop(clip: StringName) -> bool:
