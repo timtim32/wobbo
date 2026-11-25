@@ -26,7 +26,7 @@ Each active session that is not away SHALL have its own avatar on the home displ
 - **THEN** the overlay shows no avatar, and every point of the strips passes clicks through
 
 ### Requirement: Behaviour follows session state
-An avatar SHALL show its session's state while standing at its spot: `thinking` and `waiting` each with their own looping clip, and `working` with one of the work clips, switching every 8 to 15 seconds by putting the current prop away and taking another. It SHALL react happily for `done`, flinch for `error`, and stroll around its spot while `idle` or after a reaction. It SHALL take on a new state within 1 second, or on arrival when it is walking in, walking off or travelling.
+An avatar SHALL show its session's state while standing at its spot: `thinking` and `waiting` each with their own looping clip, and `working` with one of the work clips, switching every 8 to 15 seconds by putting the current prop away and taking another, and after every 2 to 4 ways of working walking around its spot for about 3 seconds before taking the next one. It SHALL react happily for `done`, flinch for `error`, and stroll around its spot while `idle` or after a reaction. It SHALL take on a new state within 1 second, or on arrival when it is walking in, walking off or travelling.
 
 #### Scenario: A prompt is worked on
 - **WHEN** the session goes from `thinking` to `working` to `done`
@@ -51,6 +51,14 @@ An avatar SHALL show its session's state while standing at its spot: `thinking` 
 #### Scenario: State changes while walking in
 - **WHEN** a session's state changes while its avatar is still walking in
 - **THEN** the avatar keeps walking, and plays the clip of the current state once it has reached its spot
+
+#### Scenario: Stretching its legs
+- **WHEN** the session stays `working` for a few minutes
+- **THEN** now and then, after putting a prop away, the avatar walks around its spot for about 3 seconds and then takes up its next way of working
+
+#### Scenario: State changes during a walk
+- **WHEN** the session goes from `working` to `done` while the avatar takes such a walk
+- **THEN** the walk ends and the avatar reacts happily
 
 ### Requirement: Sleeping and waking
 An avatar whose session has had no activity for 2 minutes while `idle`, `done` or `error` SHALL fall asleep at its spot. It SHALL wake up and show the session's state when the session becomes active again. An avatar in `thinking`, `working` or `waiting` SHALL NOT fall asleep.
