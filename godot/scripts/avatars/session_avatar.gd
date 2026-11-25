@@ -301,6 +301,11 @@ func _process(delta: float) -> void:
 				elif position.x < target - r:
 					position.x = target - r
 					_dir = 1.0
+	if _carry != &"" or is_climbing():
+		# A climb or jump started this frame: it places the body and picks the
+		# clip itself, so the floor and the mood's clip must not snap it back.
+		_finish_frame(delta)
+		return
 	_update_lift(delta)
 	_land_clip_left = maxf(0.0, _land_clip_left - delta)
 	# The jump and landing clips win while they play; the mood's clip (re)starts afterwards.
