@@ -26,7 +26,7 @@ const BLINK_MIN_SEC := 2.0
 const BLINK_MAX_SEC := 6.0
 
 const LOOPING_CLIPS: Array[StringName] = [&"idle", &"walk", &"sleep", &"thinking", &"working", &"waiting",
-	&"work_hammer", &"work_laptop", &"work_wrench", &"work_papers", &"dangle"]
+	&"work_hammer", &"work_laptop", &"work_wrench", &"work_papers", &"dangle", &"climb"]
 const ONE_SHOT_CLIPS: Array[StringName] = [&"wave", &"happy", &"error", &"dock_hop", &"land",
 	&"work_hammer_in", &"work_hammer_out", &"work_laptop_in", &"work_laptop_out",
 	&"work_wrench_in", &"work_wrench_out", &"work_papers_in", &"work_papers_out"]

@@ -84,6 +84,30 @@ func release() -> void:
 	mode = &"flying"
 
 
+## Launches the body from standing at `feet_now` with `velocity` (points per
+## second) and `spin` (radians per second, positive = clockwise): it flies,
+## falls and lands like a released buddy (side-climb: jumping down).
+func throw(feet_now: Vector2, com_local: Vector2, body_height: float, velocity: Vector2, spin: float) -> void:
+	_com_local = com_local
+	_height = body_height
+	tilt = 0.0
+	feet = feet_now
+	_com = feet_now + com_local
+	_com_v = velocity
+	_omega = spin
+	_leftover_sec = 0.0
+	mode = &"flying"
+
+
+## Moves the whole state by `offset`: the body changes to another strip's
+## walkway coordinates over the seam of stacked displays (side-climb).
+func shift(offset: Vector2) -> void:
+	feet += offset
+	_com += offset
+	_pivot += offset
+	_target += offset
+
+
 func is_busy() -> bool:
 	return mode != &"rest"
 

@@ -5,7 +5,7 @@ const MonsterScene := preload("res://characters/monster/monster.tscn")
 const AvatarMood := preload("res://scripts/core/avatar_mood.gd")
 const SessionAvatar := preload("res://scripts/avatars/session_avatar.gd")
 const LOOPING: Array[StringName] = [&"idle", &"walk", &"sleep", &"thinking", &"working", &"waiting",
-	&"work_hammer", &"work_laptop", &"work_wrench", &"work_papers", &"dangle"]
+	&"work_hammer", &"work_laptop", &"work_wrench", &"work_papers", &"dangle", &"climb"]
 ## Prop node -> the only clip that may show it (work-and-wait D3, D4).
 const PROPS := {"arm_r/PropHammer": &"work_hammer", "arm_r/PropWrench": &"work_wrench",
 	"PropLaptop": &"work_laptop", "PropPapers": &"work_papers", "PropPage": &"work_papers"}
@@ -185,3 +185,7 @@ func test_every_clip_an_avatar_plays_exists() -> void:
 			var transition := StringName(String(clip) + suffix)
 			assert_true(transition in Monster.ONE_SHOT_CLIPS, "%s is a one-shot clip" % transition)
 			assert_true(monster.has_clip(transition), "%s has an animation" % transition)
+
+
+func test_climb_is_playable() -> void:
+	assert_true(&"climb" in Monster.LOOPING_CLIPS, "Monster.play() accepts climb (side-climb D7)")

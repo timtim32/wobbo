@@ -127,3 +127,150 @@ func test_screen_menu_items() -> void:
 	var missing := ScreenMenu.items([displays[0]], "2", "LG HDR WQHD")
 	assert_eq(missing[-1].label, "LG HDR WQHD (not connected)")
 	assert_true(missing[-1].checked and missing[-1].disabled)
+
+
+# --- Climb links between stacked displays (side-climb D1, D2, D6) ---------------
+
+# The user's desk: an HP (1920x1080 pt) standing on the built-in display
+# (1512x982 pt), sticking out 229 pt left and 179 pt right. Global px at scale 2.
+const HP_TOP := {"id": 2, "name": "HP", "main": false,
+	"rect_px": Rect2(0, 1440, 3840, 720), "frame_px": Rect2(0, 0, 3840, 2160)}
+const BUILTIN_BELOW := {"id": 1, "name": "Built-in", "main": true,
+	"rect_px": Rect2(458, 3404, 3024, 720), "frame_px": Rect2(458, 2160, 3024, 1964)}
+
+
+func test_stacked_displays_get_a_climb_link_with_both_sides() -> void:
+	var w = Walkway.build([BUILTIN_BELOW, HP_TOP], 2.0)
+	assert_eq(w.segments[0].id, 2, "HP first (further left)")
+	assert_eq(w.links.size(), 1)
+	var link = w.links[0]
+	assert_eq(link.kind, &"climb")
+	assert_eq(link.lower, 1)
+	assert_eq(link.upper, 0)
+	assert_eq(link.sides.size(), 2)
+	assert_eq(link.sides[0].dir, 1, "right edge first")
+	assert_eq(link.sides[0].lower_x, 3432.0, "right end of the built-in strip")
+	assert_eq(link.sides[0].upper_x, 1741.0, "the same desk x on the HP")
+	assert_eq(link.sides[1].dir, -1)
+	assert_eq(link.sides[1].lower_x, 1920.0)
+	assert_eq(link.sides[1].upper_x, 229.0)
+	assert_eq(link.top_y, -622.0, "the built-in display's top, above its strip")
+	assert_eq(link.top_y + link.upper_dy, 360.0, "is the bottom of the HP strip")
+
+
+func test_side_by_side_at_different_heights_is_an_edge() -> void:
+	var a := BUILTIN.duplicate()
+	a.frame_px = Rect2(0, 1238, 3024, 1964)
+	var b := WIDE.duplicate()
+	b.frame_px = Rect2(3024, 0, 6880, 2880)
+	var w = Walkway.build([a, b], 2.0)
+	assert_eq(w.links[0].kind, &"edge")
+
+
+func test_narrow_display_centred_above_is_an_edge() -> void:
+	var lower := {"id": 1, "name": "Wide", "main": true,
+		"rect_px": Rect2(0, 2160, 6880, 720), "frame_px": Rect2(0, 1000, 6880, 1880)}
+	var upper := {"id": 2, "name": "Small", "main": false,
+		"rect_px": Rect2(1000, 280, 3024, 720), "frame_px": Rect2(1000, -964, 3024, 1964)}
+	var w = Walkway.build([lower, upper], 2.0)
+	assert_eq(w.links[0].kind, &"edge")
+
+
+func test_upper_flush_with_one_edge_gives_one_side() -> void:
+	var lower := {"id": 1, "name": "Built-in", "main": true,
+		"rect_px": Rect2(0, 3404, 3024, 720), "frame_px": Rect2(0, 2160, 3024, 1964)}
+	var upper := {"id": 2, "name": "HP", "main": false,
+		"rect_px": Rect2(1024, 1440, 2000, 720), "frame_px": Rect2(1024, 0, 2000, 2160)}
+	var w = Walkway.build([lower, upper], 2.0)
+	var link = w.links[0]
+	assert_eq(link.kind, &"climb")
+	assert_eq(link.sides.size(), 1)
+	assert_eq(link.sides[0].dir, 1, "the right edges line up; the left edge has nothing above")
+
+
+func test_three_displays_with_one_stacked_pair() -> void:
+	var right := {"id": 3, "name": "Right", "main": false,
+		"rect_px": Rect2(3482, 3404, 3024, 720), "frame_px": Rect2(3482, 2160, 3024, 1964)}
+	var w = Walkway.build([BUILTIN_BELOW, HP_TOP, right], 2.0)
+	assert_eq(w.links[0].kind, &"climb")
+	assert_eq(w.links[1].kind, &"edge", "built-in and Right stand side by side")
+
+
+func test_no_frames_means_edges() -> void:
+	var w = Walkway.build([BUILTIN, WIDE], 2.0)
+	assert_eq(w.links[0].kind, &"edge")
+
+
+func test_route_up_takes_the_nearer_side() -> void:
+	var w = Walkway.build([BUILTIN_BELOW, HP_TOP], 2.0)
+	var half := 30.0
+	# Near the built-in's right edge, home spot in the middle of the HP.
+	var step: Dictionary = w.next_step(1, 3300.0, 0, 960.0, half)
+	assert_eq(step.kind, &"walk")
+	assert_eq(step.x, 3432.0 - half, "to the foot of the right edge")
+	assert_eq(step.side.dir, 1)
+	step = w.next_step(1, 3432.0 - half, 0, 960.0, half, step.side)
+	assert_eq(step.kind, &"climb")
+	# Near the left edge.
+	step = w.next_step(1, 2000.0, 0, 960.0, half)
+	assert_eq(step.side.dir, -1)
+	assert_eq(step.x, 1920.0 + half)
+
+
+func test_route_down_walks_to_the_top_of_the_edge() -> void:
+	var w = Walkway.build([BUILTIN_BELOW, HP_TOP], 2.0)
+	var step: Dictionary = w.next_step(0, 1600.0, 1, 3300.0, 30.0)
+	assert_eq(step.side.dir, 1)
+	assert_eq(step.x, 1741.0 - 30.0, "above the built-in's right edge, on the HP")
+
+
+func test_kept_side_wins() -> void:
+	var w = Walkway.build([BUILTIN_BELOW, HP_TOP], 2.0)
+	var left = w.links[0].sides[1]
+	var step: Dictionary = w.next_step(1, 3300.0, 0, 960.0, 30.0, left)
+	assert_eq(step.side, left, "no turning around halfway")
+
+
+func test_route_over_edges_walks_straight() -> void:
+	var w = Walkway.build([BUILTIN, WIDE], 2.0)
+	var step: Dictionary = w.next_step(0, 100.0, 1, 3000.0, 30.0)
+	assert_eq(step.kind, &"walk")
+	assert_eq(step.x, 3000.0)
+
+
+func test_exit_stays_on_own_side_of_a_climb() -> void:
+	var w = Walkway.build([BUILTIN_BELOW, HP_TOP], 2.0)
+	assert_eq(w.exit_x(1800.0, 30.0, 4.0), 1920.0 + 34.0, "HP's right end, not across the built-in")
+	assert_eq(w.exit_x(100.0, 30.0, 4.0), -34.0)
+	assert_eq(w.exit_x(3000.0, 30.0, 4.0), 3432.0 + 34.0)
+	var flat = Walkway.build([BUILTIN, WIDE], 2.0)
+	assert_eq(flat.exit_x(1000.0, 30.0, 4.0), -34.0, "as before without climb links")
+
+
+func test_across_maps_the_top_of_the_lower_display_to_the_upper_strip() -> void:
+	var w = Walkway.build([BUILTIN_BELOW, HP_TOP], 2.0)
+	var link = w.links[0]
+	var p: Vector2 = w.across(1, 0, Vector2(3400.0, link.top_y))
+	assert_eq(p, Vector2(1709.0, 360.0), "the bottom edge of the HP strip, above the same desk x")
+	assert_eq(w.across(0, 1, p), Vector2(3400.0, link.top_y), "and back")
+
+
+func test_over_the_seam_upwards_and_back() -> void:
+	var w = Walkway.build([BUILTIN_BELOW, HP_TOP], 2.0)
+	var stay: Dictionary = w.over_seam(1, Vector2(2500.0, -600.0), 30.0, 360.0)
+	assert_eq(stay.strip, 1, "still below the built-in's top edge")
+	var up: Dictionary = w.over_seam(1, Vector2(2500.0, -630.0), 30.0, 360.0)
+	assert_eq(up.strip, 0, "over the top: on the HP")
+	assert_eq(up.point, Vector2(809.0, 352.0))
+	var down: Dictionary = w.over_seam(0, Vector2(809.0, 370.0), 30.0, 360.0)
+	assert_eq(down.strip, 1, "below the HP strip: back on the built-in")
+	var aside: Dictionary = w.over_seam(0, Vector2(100.0, 370.0), 30.0, 360.0)
+	assert_eq(aside.strip, 0, "nothing below the part of the HP that sticks out")
+
+
+func test_open_above() -> void:
+	var w = Walkway.build([BUILTIN_BELOW, HP_TOP], 2.0)
+	assert_true(w.open_above(1, 2500.0, 30.0), "the HP stands on the built-in")
+	assert_false(w.open_above(0, 900.0, 30.0), "nothing on top of the HP")
+	var flat = Walkway.build([BUILTIN, WIDE], 2.0)
+	assert_false(flat.open_above(0, 500.0, 30.0))

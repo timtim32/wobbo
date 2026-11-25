@@ -20,6 +20,10 @@ var hue := -1.0
 var height_pt := Monster.DISPLAY_HEIGHT_PT
 ## Global screen px (DisplayServer space) the eye looks at, or null.
 var look_target: Variant = null
+## When >= 0, the body is drawn only on segments in the same run as this one
+## (joined by edges, not climb links): walking in or off at an inner end of
+## the walkway, next to a climb route (side-climb D6).
+var only_run := -1
 
 var _views := {} # strip index -> Monster
 var _primary := -1
@@ -103,6 +107,12 @@ func _view_freed(_i: int) -> void:
 	pass
 
 
+## Strips that also show the body, placed by desk position instead of walkway x:
+## the other display of a climb route (side-climb D4).
+func _extra_strips() -> Array[int]:
+	return []
+
+
 func _process(_delta: float) -> void:
 	_update_views()
 
@@ -127,8 +137,18 @@ func _update_views() -> void:
 		return
 	var wanted: Array[int] = Overlay.strips_overlapping(rect_pt())
 	var primary: int = Overlay.walkway.index_at(position.x)
+	if only_run >= 0 and only_run < Overlay.walkway.segments.size():
+		wanted.assign(wanted.filter(func(i: int) -> bool: return Overlay.walkway.same_run(i, only_run)))
+		if not Overlay.walkway.same_run(primary, only_run):
+			primary = only_run # beyond the end of its window: drawn off-screen
 	if not primary in wanted:
 		wanted.append(primary)
+	var extra: Array[int] = []
+	for i in _extra_strips():
+		if i != primary and i >= 0 and i < Overlay.walkway.segments.size():
+			extra.append(i)
+			if not i in wanted:
+				wanted.append(i)
 	for i in _views.keys():
 		if not i in wanted:
 			_views[i].queue_free()
@@ -161,7 +181,8 @@ func _update_views() -> void:
 		main.clear_look_target()
 	for i in _views:
 		var m: Monster = _views[i]
-		m.position = Overlay.walkway_to_local(i, position)
+		var at := Overlay.walkway_across(_primary, i, position) if i in extra else position
+		m.position = Overlay.walkway_to_local(i, at)
 		m.rotation = tilt
 		if i != _primary:
 			m.mirror(main)

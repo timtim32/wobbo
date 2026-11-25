@@ -138,3 +138,23 @@ func test_same_at_30_and_60_fps() -> void:
 	_grab_head(p)
 	_run(1.0, 30, sway)
 	assert_true(absf(s.tilt - tilt60) < 0.1, "30 fps %f vs 60 fps %f" % [s.tilt, tilt60])
+
+
+func test_thrown_body_spins_and_lands() -> void:
+	var s := SwingPhysics.new()
+	s.throw(Vector2(100.0, -600.0), Vector2(0.0, -50.0), 100.0, Vector2(-140.0, -420.0), -TAU)
+	assert_eq(s.mode, &"flying")
+	for i in 240:
+		s.step(1.0 / 60.0, Vector2.ZERO, Rect2(0.0, -1.0e6, 2000.0, 0.0), 352.0)
+	assert_eq(s.mode, &"rest", "landed and stood up")
+	assert_eq(s.feet.y, 352.0)
+	assert_eq(s.tilt, 0.0)
+
+
+func test_shift_moves_the_flight() -> void:
+	var s := SwingPhysics.new()
+	s.throw(Vector2(100.0, 0.0), Vector2(0.0, -50.0), 100.0, Vector2(0.0, -400.0), 0.0)
+	s.step(0.05, Vector2.ZERO, Rect2(0.0, -1.0e6, 2000.0, 0.0), 352.0)
+	var before := s.feet
+	s.shift(Vector2(-1000.0, 982.0))
+	assert_eq(s.feet, before + Vector2(-1000.0, 982.0))

@@ -221,6 +221,24 @@ static func body_clips() -> Dictionary:
 			"eye_scale": [[0.0, v(1.15, 1.15)]],
 			"pupil_bias": [[0.0, v(0, -0.2)]],
 		}},
+		# side-climb D7: climbing a display's side edge, hand over hand. The view
+		# faces the edge; arms reach up in turns in front of the body, the legs
+		# push in counter-phase, a small hitch on each pull, eye up along the edge.
+		"climb": {"length": 0.6, "loop": true, "mouth": "neutral", "tracks": {
+			"arm_l_z": [[0.0, 1]],
+			"arm_r_z": [[0.0, 1]],
+			"root_pos": [[0.0, v(0, 0)], [0.12, v(0, -8)], [0.3, v(0, 0)], [0.42, v(0, -8)], [0.6, v(0, 0)]],
+			"body_rot": [[0.0, 0.1], [0.3, 0.14], [0.6, 0.1]],
+			"body_scale": [[0.0, v(0.98, 1.03)], [0.12, v(1.02, 0.98)], [0.3, v(0.98, 1.03)],
+				[0.42, v(1.02, 0.98)], [0.6, v(0.98, 1.03)]],
+			"arm_l": [[0.0, 2.8], [0.3, 1.5], [0.6, 2.8]],
+			"arm_r": [[0.0, -1.5], [0.3, -2.8], [0.6, -1.5]],
+			"leg_l": [[0.0, -0.1], [0.3, 0.45], [0.6, -0.1]],
+			"leg_r": [[0.0, -0.45], [0.3, 0.1], [0.6, -0.45]],
+			"ear_l": [[0.0, 0.08], [0.15, -0.05], [0.3, 0.08], [0.45, -0.05], [0.6, 0.08]],
+			"ear_r": [[0.0, -0.05], [0.15, 0.08], [0.3, -0.05], [0.45, 0.08], [0.6, -0.05]],
+			"pupil_bias": [[0.0, v(0.45, -0.6)]],
+		}},
 		# buddy-drag D7: touching down after a drop. Squash with bent legs and arms
 		# out, spring back, settle in the idle pose.
 		"land": {"length": 0.35, "loop": false, "mouth": "open", "tracks": {

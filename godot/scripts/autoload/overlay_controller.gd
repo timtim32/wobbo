@@ -50,6 +50,8 @@ const HIDE_EMPTY_AFTER_SEC := 1.0
 ## and window rects are re-checked this long after each grow or shrink (buddy-drag spike S1).
 const HEADROOM_LINGER_SEC := 0.3
 const RECT_CHECK_SEC := 1.0
+## The climb room (side-climb D5) stays this long after the last climber left.
+const CLIMB_LINGER_SEC := 0.5
 
 
 ## One display's strip: its window, stage for content, and last pass-through.
@@ -60,6 +62,10 @@ class Strip:
 	var main: bool
 	var rect_px: Rect2i # global px (DisplayServer space), without headroom
 	var room_px := 0 # px between the usable area's top and the strip's top (buddy-drag D6)
+	var climb_room_px := 0 # px the strip grows while a buddy climbs (side-climb D5)
+	var climb_refs := 0
+	var climb_on := false
+	var climb_linger := -1.0
 	var window: Window # the root window for the main display, else a Window node
 	var stage: Node2D # content views and debug drawing for this strip
 	var ui: CanvasLayer # panels (the debug session panel) in this strip's window
@@ -136,6 +142,7 @@ func _process(delta: float) -> void:
 	_update_home()
 	_update_strip_visibility(delta)
 	_update_headroom(delta)
+	_update_climb_room(delta)
 	if _registry.is_capturing() and DisplayServer.mouse_get_button_state() == 0:
 		# Safety net: the button-up happened outside our windows and never reached us.
 		_on_click_released(_registry.release())
@@ -206,6 +213,20 @@ func local_rect_to_walkway(i: int, rect: Rect2) -> Rect2:
 ## Strips whose span overlaps `rect` (walkway points) horizontally.
 func strips_overlapping(rect: Rect2) -> Array[int]:
 	return walkway.indices_overlapping(rect)
+
+
+## Converts walkway point `point` given on strip `from` to the walkway point
+## at the same place on the desk, expressed on strip `to` (side-climb D4).
+func walkway_across(from: int, to: int, point: Vector2) -> Vector2:
+	return walkway.across(from, to, point)
+
+
+func _log_links() -> void:
+	for i in walkway.links.size():
+		var link := walkway.links[i]
+		if link.kind == &"climb":
+			print("Overlay: strips %d-%d climb link (lower %d, sides %s)" % [i, i + 1, link.lower,
+				", ".join(link.sides.map(func(sd) -> String: return "right" if sd.dir == 1 else "left"))])
 
 
 ## Display under the mouse pointer (its id), or -1.
@@ -323,13 +344,15 @@ func _update_layout(force := false) -> void:
 			continue
 		if not d.main and TrailerMode.active():
 			continue # the trailer is recorded on the main display only
-		wanted.append({"id": d.id, "name": d.name, "main": d.main, "rect_px": Rect2(_strip_rect(d.screen, px_per_pt))})
+		wanted.append({"id": d.id, "name": d.name, "main": d.main, "rect_px": Rect2(_strip_rect(d.screen, px_per_pt)),
+			"frame_px": Rect2(_screen_rect_px(d.screen))})
 	var signature := var_to_str(wanted) + str(px_per_pt)
 	if not force and signature == _signature:
 		return
 	_signature = signature
 	var old_walkway := walkway
 	walkway = Walkway.build(wanted, px_per_pt)
+	_log_links()
 	_sync_strips()
 	_hover_strip = -1
 	_hover_target = &""
@@ -354,6 +377,9 @@ func _sync_strips() -> void:
 		s.main = seg.main
 		s.rect_px = Rect2i(seg.rect_px)
 		s.room_px = _room_px(s)
+		# Up to the usable top, not over the menu bar: macOS moves a window that
+		# covers the menu bar down and drops its level (side-climb spike S1).
+		s.climb_room_px = s.room_px
 		var want_root: bool = seg.main
 		if want_root and s.window != get_window():
 			_free_window(s)
@@ -476,6 +502,59 @@ func end_headroom() -> void:
 		_headroom_linger = HEADROOM_LINGER_SEC
 
 
+## Grows strip i's window up to the top of its display's usable area (below the
+## menu bar) while a buddy climbs there (side-climb D5), until the matching end_climb_room(i).
+## Reference counted per strip; the window stays grown a moment after the last end.
+func begin_climb_room(i: int) -> void:
+	if i < 0 or i >= _strips.size():
+		return
+	var s := _strips[i]
+	s.climb_refs += 1
+	s.climb_linger = -1.0
+	if not s.climb_on:
+		s.climb_on = true
+		_regrow(s)
+		print("Overlay: climb room on for strip %d" % i)
+
+
+func end_climb_room(i: int) -> void:
+	if i < 0 or i >= _strips.size() or _strips[i].climb_refs <= 0:
+		return
+	var s := _strips[i]
+	s.climb_refs -= 1
+	if s.climb_refs == 0:
+		s.climb_linger = CLIMB_LINGER_SEC
+
+
+## Room above strip i up to the usable area's top, in points.
+func climb_room_pt(i: int) -> float:
+	if i < 0 or i >= _strips.size():
+		return 0.0
+	return _strips[i].climb_room_px / walkway.px_per_pt
+
+
+func climb_room_active(i: int) -> bool:
+	return i >= 0 and i < _strips.size() and _strips[i].climb_on
+
+
+func _regrow(s: Strip) -> void:
+	_place_window(s, false)
+	s.applied = ""
+	_rect_check_left = RECT_CHECK_SEC
+
+
+func _update_climb_room(delta: float) -> void:
+	for i in _strips.size():
+		var s := _strips[i]
+		if s.climb_linger < 0.0:
+			continue
+		s.climb_linger -= delta
+		if s.climb_linger < 0.0 and s.climb_refs == 0 and s.climb_on:
+			s.climb_on = false
+			_regrow(s)
+			print("Overlay: climb room off for strip %d" % i)
+
+
 func headroom_active() -> bool:
 	return _headroom_on
 
@@ -508,6 +587,14 @@ func pointer_pt() -> Vector2:
 		if mouse.x >= r.position.x and mouse.x < r.end.x:
 			best = i
 	return local_to_walkway(best, Vector2(mouse - _strips[best].rect_px.position))
+
+
+## The pointer in walkway points of strip i, wherever it is on the desk.
+func pointer_on(i: int) -> Vector2:
+	var mouse := DisplayServer.mouse_get_position()
+	if i < 0 or i >= _strips.size():
+		return Vector2(mouse)
+	return local_to_walkway(i, Vector2(mouse - _strips[i].rect_px.position))
 
 
 func _set_headroom(on: bool) -> void:
@@ -543,15 +630,16 @@ func _update_headroom(delta: float) -> void:
 
 
 func _window_rect(s: Strip) -> Rect2i:
-	if not _headroom_on:
-		return s.rect_px
-	return Rect2i(s.rect_px.position.x, s.rect_px.position.y - s.room_px, s.rect_px.size.x,
-		s.rect_px.size.y + s.room_px)
+	var head := _head_px(s)
+	return Rect2i(s.rect_px.position.x, s.rect_px.position.y - head, s.rect_px.size.x, s.rect_px.size.y + head)
 
 
-## How far the window reaches above the strip, in px (0 without headroom).
+## How far the window reaches above the strip, in px (0 without headroom or climb room).
 func _head_px(s: Strip) -> int:
-	return s.room_px if _headroom_on else 0
+	var head := s.room_px if _headroom_on else 0
+	if s.climb_on:
+		head = maxi(head, s.climb_room_px)
+	return head
 
 
 func _room_px(s: Strip) -> int:
