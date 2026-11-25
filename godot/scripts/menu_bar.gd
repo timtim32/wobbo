@@ -24,6 +24,11 @@ var _size_menu := PopupMenu.new()
 var _size_values: Array[String] = []
 var _messages_menu := PopupMenu.new()
 var _messages_values: Array[String] = []
+## macOS's login item state as last read; asking takes 150-450 ms, so it is read
+## on a worker thread and the menu only uses this (quick-menu D1).
+var _login_status := "not_registered"
+var _login_task := -1
+var _login_toggles := 0 # a read that started before a toggle is stale
 
 
 func _ready() -> void:
@@ -64,7 +69,14 @@ func _ready() -> void:
 	if _demo:
 		_demo.running_changed.connect(func(_r: bool) -> void: _sync())
 	_sync()
+	_read_login_status()
 	_make_icon_template.call_deferred()
+
+
+func _exit_tree() -> void:
+	if _login_task >= 0:
+		WorkerThreadPool.wait_for_task_completion(_login_task)
+		_login_task = -1
 
 
 ## Godot does not mark the status icon as a template image, so macOS would draw
@@ -98,7 +110,33 @@ func _sync() -> void:
 func _on_menu_opening() -> void:
 	if _setup:
 		_setup.refresh() # re-read unless fresh; the item updates when done
+	_read_login_status()
 	_sync_app_items()
+
+
+func _login_location() -> String:
+	var native: Object = Overlay.native
+	return native.bundle_location() if native else "elsewhere"
+
+
+## Starts one background read of the login state (quick-menu D1, D2); the item
+## updates when it is back.
+func _read_login_status() -> void:
+	var native: Object = Overlay.native
+	if native == null or _login_task >= 0 \
+			or not AppMenu.needs_login_status(OS.has_feature("template"), _login_location()):
+		return
+	var toggles := _login_toggles
+	_login_task = WorkerThreadPool.add_task(func() -> void:
+		_login_status_read.call_deferred(native.login_item_status(), toggles))
+
+
+func _login_status_read(status: String, toggles: int) -> void:
+	WorkerThreadPool.wait_for_task_completion(_login_task)
+	_login_task = -1
+	if toggles == _login_toggles and status != _login_status:
+		_login_status = status
+		_sync_app_items()
 
 
 ## The Claude Code item and "Open at Login" (standalone-app D7, D9).
@@ -107,10 +145,8 @@ func _sync_app_items() -> void:
 	var i := _menu.get_item_index(Item.CLAUDE)
 	_menu.set_item_text(i, claude.label)
 	_menu.set_item_disabled(i, _setup == null or claude.disabled)
-	var native: Object = Overlay.native
-	var login := AppMenu.login_item(OS.has_feature("template"),
-		native.bundle_location() if native else "elsewhere",
-		native.login_item_status() if native else "unavailable")
+	var login := AppMenu.login_item(OS.has_feature("template"), _login_location(),
+		_login_status if Overlay.native else "unavailable")
 	i = _menu.get_item_index(Item.LOGIN)
 	_menu.set_item_disabled(i, not login.enabled)
 	_menu.set_item_checked(i, login.checked)
@@ -123,6 +159,8 @@ func _toggle_login_item() -> void:
 	var turn_on: bool = native.login_item_status() != "enabled"
 	var err: String = native.set_login_item(turn_on)
 	var status: String = native.login_item_status()
+	_login_status = status
+	_login_toggles += 1
 	print("MenuBar: Open at Login %s -> %s%s" % ["on" if turn_on else "off", status, "" if err.is_empty() else " (%s)" % err])
 	if turn_on and status == "requires_approval":
 		native.open_login_items_settings()

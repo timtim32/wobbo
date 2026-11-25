@@ -22,6 +22,13 @@ func test_login_check_mark_follows_macos() -> void:
 	assert_false(AppMenu.login_item(true, "applications", "not_found").checked, "removed in System Settings")
 
 
+func test_needs_login_status_only_where_the_item_can_be_enabled() -> void:
+	assert_true(AppMenu.needs_login_status(true, "applications"), "installed app")
+	assert_false(AppMenu.needs_login_status(false, "applications"), "editor run")
+	assert_false(AppMenu.needs_login_status(true, "disk_image"), "from the disk image")
+	assert_false(AppMenu.needs_login_status(true, "elsewhere"), "elsewhere")
+
+
 func test_offer_move() -> void:
 	assert_false(AppMenu.offer_move(true, "applications"))
 	assert_true(AppMenu.offer_move(true, "disk_image"))

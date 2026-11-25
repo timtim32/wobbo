@@ -25,6 +25,12 @@ static func login_item(exported: bool, location: String, status: String) -> Dict
 		"checked": status == "enabled"}
 
 
+## Whether asking macOS for the login state makes sense: only where "Open at
+## Login" can be enabled at all (quick-menu D2).
+static func needs_login_status(exported: bool, location: String) -> bool:
+	return exported and location == "applications"
+
+
 ## Whether to offer "Move to Applications" (spec "Moving to Applications").
 static func offer_move(exported: bool, location: String) -> bool:
 	return exported and location != "applications"
