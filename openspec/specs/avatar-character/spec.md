@@ -40,7 +40,7 @@ The character SHALL be built from separate parts: body, eye (white, pupil and hi
 - **THEN** the eye, fangs, spots, ears and arms stay attached to the body in the right places
 
 ### Requirement: Animation clips
-The character SHALL be able to play these named animations: `idle`, `blink`, `walk`, `wave`, `sleep`, `thinking`, `working`, `work_hammer`, `work_laptop`, `work_wrench`, `work_papers`, their `_in` and `_out` transitions, `happy`, `error`, `waiting`, `dangle` and `land`. `idle`, `walk`, `sleep`, `thinking`, `working`, the four `work_*` loops, `waiting` and `dangle` SHALL loop without a visible jump. `blink`, `wave`, `happy`, `error`, `land` and the `_in`/`_out` transitions SHALL play once.
+The character SHALL be able to play these named animations: `idle`, `blink`, `walk`, `wave`, `sleep`, `thinking`, `working`, `work_hammer`, `work_laptop`, `work_wrench`, `work_papers`, their `_in` and `_out` transitions, `happy`, `error`, `waiting`, `dangle`, `land` and `climb`. `idle`, `walk`, `sleep`, `thinking`, `working`, the four `work_*` loops, `waiting`, `dangle` and `climb` SHALL loop without a visible jump. `blink`, `wave`, `happy`, `error`, `land` and the `_in`/`_out` transitions SHALL play once.
 
 #### Scenario: Looping clip
 - **WHEN** the character plays `walk` for several cycles
@@ -146,3 +146,14 @@ The `dangle` clip SHALL show a character that hangs helplessly: legs kicking in 
 #### Scenario: Landing
 - **WHEN** the character plays `land`
 - **THEN** it squashes down, springs back up to standing, and continues with `idle` without a visible jump
+
+### Requirement: Climb clip
+The `climb` clip SHALL show the character climbing up a vertical edge seen from the side: its body upright and close to the edge it faces, the arms reaching up in turns and the legs pushing up in turns, the ears swaying a little and the eye looking up along the edge.
+
+#### Scenario: Climbing
+- **WHEN** the character plays `climb` at its normal size while it moves up along a display's side edge
+- **THEN** a viewer sees it climb hand over hand, clearly different from `walk`, `dangle` and `waiting`
+
+#### Scenario: Facing the edge
+- **WHEN** the character climbs along the right edge of a display
+- **THEN** it faces right, towards the edge, and faces left along the left edge

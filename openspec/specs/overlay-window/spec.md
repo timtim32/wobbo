@@ -7,7 +7,7 @@ Provides the transparent, click-through desktop surface along the bottom of the 
 ## Requirements
 
 ### Requirement: Bottom strip placement
-The overlay SHALL occupy, on every connected display, the full width of that display's usable area (excluding menu bar and Dock), anchored to its bottom edge, with a fixed height in points large enough for an avatar plus a speech balloon above it. While a buddy is carried or falling, every strip MAY grow upward to the full usable height of its display, and SHALL return to its fixed height within 1 second after the buddy has landed. Each display's strip SHALL meet all other requirements of the overlay (transparent, click-through outside interactive regions, always on top, on all Spaces, no focus stealing).
+The overlay SHALL occupy, on every connected display, the full width of that display's usable area (excluding menu bar and Dock), anchored to its bottom edge, with a fixed height in points large enough for an avatar plus a speech balloon above it. While a buddy is carried or falling, every strip MAY grow upward to the full usable height of its display, and SHALL return to its fixed height within 1 second after the buddy has landed. While a buddy climbs along a side edge of a display or jumps down onto it, that display's strip MAY grow upward to the full usable height of the display, and SHALL return to its fixed height within 1 second after the last such buddy has left it or landed. Each display's strip SHALL meet all other requirements of the overlay (transparent, click-through outside interactive regions, always on top, on all Spaces, no focus stealing).
 
 #### Scenario: Launch on a single display
 - **WHEN** the app starts on a Mac with one display
@@ -33,6 +33,14 @@ The overlay SHALL occupy, on every connected display, the full width of that dis
 #### Scenario: Clicks after an aborted drag
 - **WHEN** the mouse button is released outside the overlay windows while a buddy is carried
 - **THEN** the buddy is dropped as if released normally and the strips return to their fixed height after it lands
+
+#### Scenario: Growing while a buddy climbs
+- **WHEN** a buddy climbs along the side edge of the lower display
+- **THEN** it is drawn in front of other windows all the way up to the menu bar, while clicks next to it still reach the windows behind the overlay
+
+#### Scenario: Back to the strip after a climb
+- **WHEN** the last climbing buddy has stepped onto the upper display, or the last jumping buddy has landed
+- **THEN** within 1 second clicks above the lower strip's normal height reach the windows behind the overlay again
 
 ### Requirement: Transparent background
 The overlay SHALL render nothing outside its drawn content: no window frame, title bar, shadow or background colour.

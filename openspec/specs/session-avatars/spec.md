@@ -257,7 +257,7 @@ While the Dock is shown on a display, every avatar on that display SHALL jump up
 - **THEN** the click reaches the buddy as it does on the floor, and clicks on the Dock next to the buddy reach the Dock
 
 ### Requirement: Picking up a buddy
-A buddy SHALL be picked up when the user presses the left button on it and either holds the button for at least 0.25 s or moves the pointer at least 6 points while holding. A press released before either happens SHALL count as a click. A buddy that is walking off SHALL NOT be picked up. Only one buddy SHALL be carried at a time.
+A buddy SHALL be picked up when the user presses the left button on it and either holds the button for at least 0.25 s or moves the pointer at least 6 points while holding. A press released before either happens SHALL count as a click. A buddy that is walking off, climbing between displays or jumping down to another display SHALL NOT be picked up. Only one buddy SHALL be carried at a time.
 
 #### Scenario: Press and hold
 - **WHEN** the user presses the left button on a strolling buddy and keeps it pressed without moving
@@ -274,6 +274,10 @@ A buddy SHALL be picked up when the user presses the left button on it and eithe
 #### Scenario: Leaving buddy
 - **WHEN** the user presses and holds the left button on a buddy that is waving goodbye or walking off
 - **THEN** the buddy is not picked up and keeps walking off
+
+#### Scenario: Climbing buddy
+- **WHEN** the user presses and holds the left button on a buddy that climbs along a display's side edge
+- **THEN** the buddy is not picked up and keeps climbing
 
 ### Requirement: Dangling from the pointer
 While carried, the buddy SHALL hang from the point where it was grabbed, and that point SHALL follow the pointer without visible lag. The buddy SHALL rotate freely around that point under gravity, play the `dangle` animation, keep looking at the pointer, and hide its name label.
@@ -302,7 +306,7 @@ A carried buddy SHALL swing like a pendulum in response to pointer movement: sid
 - **THEN** the buddy slows down, swings back and forth for a while and comes to rest hanging below the grab point
 
 ### Requirement: Carrying over the whole screen
-A carried buddy SHALL be visible and follow the pointer anywhere within the usable area of any display, including high above the bottom strip and across displays. It SHALL NOT be drawn above the usable area's top edge or beyond the outer ends of the walkway.
+A carried buddy SHALL be visible and follow the pointer anywhere within the usable area of any display, including high above the bottom strip and across displays. It SHALL NOT be drawn above the usable area's top edge or beyond the outer ends of the walkway, except where a display stands on top of the one it is on: there it SHALL follow the pointer over the seam onto that display and back. It SHALL NOT be carried sideways from a display onto a display it is only joined to by a climb route.
 
 #### Scenario: Lifting high
 - **WHEN** the user carries a buddy up to the middle of the screen
@@ -312,8 +316,16 @@ A carried buddy SHALL be visible and follow the pointer anywhere within the usab
 - **WHEN** the user carries a buddy from the built-in display onto an external display
 - **THEN** the buddy keeps hanging from the pointer on the external display
 
+#### Scenario: Up onto the display above
+- **WHEN** an external display stands on top of the built-in display and the user carries a buddy from the built-in display up over its top edge
+- **THEN** the buddy keeps hanging from the pointer on the external display
+
+#### Scenario: Sideways next to stacked displays
+- **WHEN** the user carries a buddy on the lower of two stacked displays past its side edge
+- **THEN** the buddy stays on the lower display and does not appear at the end of the upper display's strip
+
 ### Requirement: Dropping and landing
-Releasing the button SHALL let the buddy go with the speed and spin it had at that moment. It SHALL then fall under gravity to the walkway floor on the display below it, staying within the walkway's ends, land upright with the `land` animation and show its name label again. A falling buddy SHALL be an interactive region and SHALL be picked up again by pressing on it.
+Releasing the button SHALL let the buddy go with the speed and spin it had at that moment. It SHALL then fall under gravity to the walkway floor on the display below it, staying within the walkway's ends, land upright with the `land` animation and show its name label again. A buddy thrown up out of the top of a display on which another display stands SHALL fly on into that display and land on its floor. A falling buddy SHALL be an interactive region and SHALL be picked up again by pressing on it.
 
 #### Scenario: Simple drop
 - **WHEN** the user releases a buddy that hangs still high above the strip
@@ -335,6 +347,10 @@ Releasing the button SHALL let the buddy go with the speed and spin it had at th
 - **WHEN** a buddy is dropped on a display while the auto-hidden Dock is shown there
 - **THEN** it lands on the same height the other buddies stand on above the Dock
 
+#### Scenario: Thrown up onto the display above
+- **WHEN** an external display stands on top of the built-in display and the user throws a buddy upwards out of the top of the built-in display
+- **THEN** it flies into the external display, lands on that display's floor, and walks back to the home display afterwards if that is another display
+
 ### Requirement: A new spot after a drop
 After landing on the home display, the buddy SHALL take the slot nearest to where it landed. If another buddy has that slot, the two SHALL swap slots, and the other buddy SHALL walk to the dropped buddy's former slot. A buddy that lands on another display SHALL keep its slot and walk back to it on the home display. The dropped buddy SHALL then go on with what its session's state asks for.
 
@@ -353,3 +369,14 @@ After landing on the home display, the buddy SHALL take the slot nearest to wher
 #### Scenario: Session state while carried
 - **WHEN** a buddy's session starts waiting for the user while the buddy is carried
 - **THEN** the buddy keeps dangling, and after landing it shows the waiting behaviour
+
+### Requirement: Quiet while climbing
+A buddy that climbs or jumps between displays SHALL show no speech balloon and no name label. A message for its session that arrives during the climb SHALL wait and be shown once the buddy stands on a floor again. A buddy that leaves while it stands on a display that is linked to the far end of the walkway only over a climb route SHALL walk off beyond the nearer outer end of its own display instead.
+
+#### Scenario: Message during a climb
+- **WHEN** Claude asks a question in a session whose buddy is climbing up to the other display
+- **THEN** the balloon with the question appears once the buddy has stepped onto the upper display's floor
+
+#### Scenario: Leaving from the upper display
+- **WHEN** a session ends while its buddy stands on the upper of two stacked displays
+- **THEN** the buddy walks off beyond the nearer side of the upper display and does not climb down first
