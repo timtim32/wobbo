@@ -14,6 +14,8 @@ const HYSTERESIS_MS := 2000
 const SLOT_MARGIN_PT := 16.0
 ## Curated skin hues (session-avatars D6, spike S2): readable, clearly different.
 const HUES: Array[float] = [97.6, 205.0, 265.0, 330.0, 180.0, 355.0, 235.0, 25.0]
+## Names of HUES, in the same order, for the Colour menu (pick-wobbo-colour D5).
+const HUE_NAMES: PackedStringArray = ["Green", "Blue", "Purple", "Pink", "Teal", "Red", "Indigo", "Orange"]
 ## Wobbo's own buddy (the welcome, standalone-app D10) always wears the
 ## original green, even when a session already has it.
 const OWN_HUE := 97.6
@@ -86,7 +88,8 @@ static func _displaces(newcomer: Dictionary, victim: Dictionary) -> bool:
 	return int(newcomer.updated_msec) - int(victim.updated_msec) >= HYSTERESIS_MS
 
 
-static func plan(sessions: Array, avatars: Array, slots: int) -> Array[Dictionary]:
+## `chosen`: hues the user chose per session name (pick-wobbo-colour D3).
+static func plan(sessions: Array, avatars: Array, slots: int, chosen := {}) -> Array[Dictionary]:
 	var actions: Array[Dictionary] = []
 	var by_id := {}
 	for s in sessions:
@@ -136,7 +139,7 @@ static func plan(sessions: Array, avatars: Array, slots: int) -> Array[Dictionar
 	for n in newcomers:
 		if not free.is_empty():
 			var slot: int = free.pop_front()
-			var hue := OWN_HUE if String(n.id).begins_with(OWN_PREFIX) else pick_hue(String(n.name), taken_hues)
+			var hue := hue_for(n, taken_hues + chosen_hues(live, chosen), chosen)
 			taken_hues.append(hue)
 			actions.append({"kind": "enter", "id": n.id, "slot": slot, "hue": hue})
 		elif pending > 0:
@@ -148,6 +151,63 @@ static func plan(sessions: Array, avatars: Array, slots: int) -> Array[Dictionar
 				actions.append({"kind": "leave", "id": victim.id, "wave": false})
 				shown_sessions.pop_back()
 	return actions
+
+
+## The hue a newcomer gets: green for Wobbo's own buddy, the folder's chosen
+## hue (even when taken), or else one picked from its name avoiding `avoid`.
+static func hue_for(session: Dictionary, avoid: Array, chosen: Dictionary) -> float:
+	if String(session.id).begins_with(OWN_PREFIX):
+		return OWN_HUE
+	var name := String(session.name)
+	if chosen.has(name):
+		return float(chosen[name])
+	return pick_hue(name, avoid)
+
+
+## Hues chosen for the folders of `sessions`.
+static func chosen_hues(sessions: Array, chosen: Dictionary) -> Array:
+	var out := []
+	for s in sessions:
+		if chosen.has(String(s.name)) and not String(s.id).begins_with(OWN_PREFIX):
+			out.append(float(chosen[String(s.name)]))
+	return out
+
+
+## New hues after the user chose `hue` for folder `name` (negative: back to
+## automatic). `chosen` holds the choices already including this one. Returns
+## [{id, hue}] for every avatar that changes: all of the folder's avatars, and
+## an avatar of another folder without a choice that wore the new hue takes the
+## old one (pick-wobbo-colour D3). Leaving avatars are left alone.
+static func recolour(avatars: Array, sessions: Array, name: String, hue: float, chosen: Dictionary) -> Array[Dictionary]:
+	var names := {}
+	for s in sessions:
+		names[s.id] = String(s.name)
+	var targets := []
+	var others := []
+	for a in avatars:
+		if a.leaving or String(a.id).begins_with(OWN_PREFIX):
+			continue
+		if names.get(a.id, "") == name:
+			targets.append(a)
+		else:
+			others.append(a)
+	var out: Array[Dictionary] = []
+	if targets.is_empty():
+		return out
+	var old: float = float(targets[0].hue)
+	var new_hue := hue
+	if new_hue < 0.0:
+		var avoid := others.map(func(a): return float(a.hue))
+		var live := sessions.filter(func(s): return String(s.name) != name)
+		new_hue = pick_hue(name, avoid + chosen_hues(live, chosen))
+	for a in targets:
+		if float(a.hue) != new_hue:
+			out.append({"id": a.id, "hue": new_hue})
+	if old != new_hue:
+		for a in others:
+			if float(a.hue) == new_hue and not chosen.has(names.get(a.id, "")):
+				out.append({"id": a.id, "hue": old})
+	return out
 
 
 static func _has_avatar(avatars: Array, id: String) -> bool:

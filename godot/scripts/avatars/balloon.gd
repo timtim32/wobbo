@@ -56,8 +56,7 @@ func setup(p_session_id: String, display_name: String, hue: float) -> void:
 	session_id = p_session_id
 	name = "Balloon_" + p_session_id.validate_node_name()
 	_px = Overlay.points_to_px(1.0)
-	if hue >= 0.0:
-		_accent = Color.from_hsv(fposmod(hue, 360.0) / 360.0, 0.75, 0.55)
+	_accent = accent_of(hue)
 	mouse_filter = Control.MOUSE_FILTER_STOP
 	z_index = 6
 	var style := StyleBoxFlat.new()
@@ -88,6 +87,22 @@ func setup(p_session_id: String, display_name: String, hue: float) -> void:
 	_bar.draw.connect(_draw_bar)
 	_box.add_child(_bar)
 	gui_input.connect(_on_gui_input)
+
+
+## The name and button colour for a buddy hue (negative: the original green).
+static func accent_of(hue: float) -> Color:
+	return DEFAULT_ACCENT if hue < 0.0 else Color.from_hsv(fposmod(hue, 360.0) / 360.0, 0.75, 0.55)
+
+
+## Gives an existing balloon a new colour (pick-wobbo-colour D4). Buttons get it
+## the next time they are built.
+func set_hue(hue: float) -> void:
+	_accent = accent_of(hue)
+	_name.add_theme_color_override("font_color", _accent)
+	var focus := _field.get_theme_stylebox("focus") as StyleBoxFlat
+	if focus:
+		focus.border_color = _accent
+	_bar.queue_redraw()
 
 
 func _build_header(display_name: String) -> void:

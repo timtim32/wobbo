@@ -51,7 +51,7 @@ After that, Wobbo opens like any other app.
 
 - **Click a Wobbo** to bring its session's window to the front.
 - **Drag a Wobbo** around, or drop it from up high.
-- **Right-click a Wobbo** to send it home.
+- **Right-click a Wobbo** to send it home, or to choose its colour under Colour. Wobbo remembers the colour for that project folder.
 - **The menu bar icon** has the settings:
   - show or hide the Wobbos;
   - choose the screen they walk on (or follow the mouse);

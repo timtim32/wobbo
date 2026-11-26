@@ -122,3 +122,23 @@ func set_value(key: StringName, value: Variant) -> void:
 	if err != OK:
 		push_warning("Settings: could not save %s (%s)." % [PATH, error_string(err)])
 	changed.emit(key, value)
+
+
+## The colour chosen for a project folder, or -1.0 (pick-wobbo-colour D2).
+func get_colour(name: String) -> float:
+	return _store.get_colour(name)
+
+
+## All chosen colours, folder name -> hue.
+func colours() -> Dictionary:
+	return _store.colours()
+
+
+## Chooses `hue` for a project folder; a negative hue goes back to automatic.
+func set_colour(name: String, hue: float) -> void:
+	if not _store.set_colour(name, hue):
+		return
+	var err := OK if transient else _store.save_file()
+	if err != OK:
+		push_warning("Settings: could not save %s (%s)." % [PATH, error_string(err)])
+	changed.emit(&"colours", name)

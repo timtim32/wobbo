@@ -238,3 +238,76 @@ func test_wobbo_is_always_green() -> void:
 		hues[a.id] = a.hue
 	assert_eq(hues["s1"], Cast.OWN_HUE, "the session picked green")
 	assert_eq(hues["wobbo:welcome"], Cast.OWN_HUE, "Wobbo is green too")
+
+
+# --- Chosen colours (pick-wobbo-colour) --------------------------------------
+
+func test_chosen_colour_wins_even_when_taken() -> void:
+	var sessions := [_s("a", 2000, &"idle", "website"), _s("b", 1000, &"idle", "wobbo")]
+	var avatars := [_a("a", 0, 25.0)]
+	var actions := Cast.plan(sessions, avatars, 5, {"wobbo": 25.0})
+	assert_eq(_kinds(actions), ["enter:b"])
+	assert_eq(actions[0].hue, 25.0, "the chosen orange, though website wears it")
+
+
+func test_automatic_avoids_a_chosen_colour() -> void:
+	var name := ""
+	for i in 200: # a folder name whose automatic colour is orange
+		if Cast.pick_hue("p%d" % i, []) == 25.0:
+			name = "p%d" % i
+			break
+	var sessions := [_s("a", 2000, &"idle", "wobbo"), _s("b", 1000, &"idle", name)]
+	var actions := Cast.plan(sessions, [], 5, {"wobbo": 25.0})
+	assert_eq(actions[0].hue, 25.0, "wobbo orange")
+	assert_true(actions[1].hue != 25.0, "the other folder avoids orange")
+
+
+func test_all_sessions_of_a_folder_wear_the_chosen_colour() -> void:
+	var sessions := [_s("a", 2000, &"idle", "wobbo"), _s("b", 1000, &"idle", "wobbo")]
+	var hues := Cast.plan(sessions, [], 5, {"wobbo": 330.0}).map(func(x): return x.hue)
+	assert_eq(hues, [330.0, 330.0])
+
+
+func test_own_buddy_stays_green_with_a_choice() -> void:
+	var sessions := [_s("wobbo:welcome", 1000, &"idle", "Wobbo")]
+	var actions := Cast.plan(sessions, [], 5, {"Wobbo": 355.0})
+	assert_eq(actions[0].hue, Cast.OWN_HUE)
+
+
+func test_recolour_all_of_the_folder() -> void:
+	var sessions := [_s("a", 0, &"idle", "wobbo"), _s("b", 0, &"idle", "wobbo"), _s("c", 0, &"idle", "web")]
+	var avatars := [_a("a", 0, 205.0), _a("b", 1, 265.0), _a("c", 2, 180.0)]
+	var out := Cast.recolour(avatars, sessions, "wobbo", 25.0, {"wobbo": 25.0})
+	assert_eq(out, [{"id": "a", "hue": 25.0}, {"id": "b", "hue": 25.0}] as Array[Dictionary])
+
+
+func test_recolour_swaps_with_an_automatic_one() -> void:
+	var sessions := [_s("a", 0, &"idle", "iris-mobile"), _s("c", 0, &"idle", "website")]
+	var avatars := [_a("a", 0, 205.0), _a("c", 1, 355.0)]
+	var out := Cast.recolour(avatars, sessions, "iris-mobile", 355.0, {"iris-mobile": 355.0})
+	assert_eq(out, [{"id": "a", "hue": 355.0}, {"id": "c", "hue": 205.0}] as Array[Dictionary])
+
+
+func test_recolour_does_not_swap_a_chosen_one() -> void:
+	var sessions := [_s("a", 0, &"idle", "iris-mobile"), _s("c", 0, &"idle", "website")]
+	var avatars := [_a("a", 0, 205.0), _a("c", 1, 355.0)]
+	var chosen := {"iris-mobile": 355.0, "website": 355.0}
+	var out := Cast.recolour(avatars, sessions, "iris-mobile", 355.0, chosen)
+	assert_eq(out, [{"id": "a", "hue": 355.0}] as Array[Dictionary], "website keeps its own choice")
+
+
+func test_recolour_back_to_automatic() -> void:
+	var sessions := [_s("a", 0, &"idle", "iris-mobile"), _s("c", 0, &"idle", "website")]
+	var avatars := [_a("a", 0, 355.0), _a("c", 1, 180.0)]
+	var out := Cast.recolour(avatars, sessions, "iris-mobile", -1.0, {})
+	var expected := Cast.pick_hue("iris-mobile", [180.0])
+	if expected == 355.0:
+		assert_eq(out.size(), 0, "automatic is red anyway")
+	else:
+		assert_eq(out, [{"id": "a", "hue": expected}] as Array[Dictionary])
+
+
+func test_recolour_skips_leaving_and_own() -> void:
+	var sessions := [_s("a", 0, &"idle", "wobbo"), _s("wobbo:welcome", 0, &"idle", "wobbo")]
+	var avatars := [_a("a", 0, 205.0, true), _a("wobbo:welcome", 1, Cast.OWN_HUE)]
+	assert_eq(Cast.recolour(avatars, sessions, "wobbo", 25.0, {"wobbo": 25.0}).size(), 0)

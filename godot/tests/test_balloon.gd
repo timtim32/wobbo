@@ -73,3 +73,10 @@ func test_asked_question_shows_choices_and_hint() -> void:
 	assert_true(balloon.is_asked())
 	balloon.show_content({"type": &"message", "text": "hi", "kind": &"message"})
 	assert_false(note.visible, "only for asked questions")
+
+
+func test_set_hue_recolours_the_name() -> void:
+	balloon.set_hue(355.0)
+	var name_label: Label = balloon.get("_name")
+	assert_eq(name_label.get_theme_color("font_color"), Balloon.accent_of(355.0), "name in the new colour")
+	assert_eq(balloon.get("_accent"), Balloon.accent_of(355.0), "accent follows")

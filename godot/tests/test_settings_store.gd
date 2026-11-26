@@ -114,3 +114,31 @@ func test_message_settings_round_trip() -> void:
 	again.load_file()
 	assert_eq(again.get_value(&"messages"), "off")
 	assert_eq(again.get_value(&"notify_done"), false)
+
+
+func test_colours_round_trip() -> void:
+	var store := SettingsStore.new(PATH)
+	assert_eq(store.get_colour("wobbo"), -1.0, "no choice by default")
+	assert_true(store.set_colour("wobbo", 25.0), "choice reported")
+	assert_false(store.set_colour("wobbo", 25.0), "same choice is no change")
+	store.set_colour("iris-mobile", 355.0)
+	assert_eq(store.save_file(), OK, "save")
+	var reloaded := SettingsStore.new(PATH)
+	assert_eq(reloaded.load_file(), OK, "load")
+	assert_eq(reloaded.get_colour("wobbo"), 25.0, "wobbo kept")
+	assert_eq(reloaded.get_colour("iris-mobile"), 355.0, "iris-mobile kept")
+	assert_true(reloaded.set_colour("wobbo", -1.0), "forget reported")
+	assert_eq(reloaded.get_colour("wobbo"), -1.0, "forgotten")
+	assert_false(reloaded.set_colour("wobbo", -1.0), "forgetting twice is no change")
+
+
+func test_bad_colours_are_dropped() -> void:
+	var file := FileAccess.open(PATH, FileAccess.WRITE)
+	file.store_string("[colours]\nok=205.0\nodd=12.0\nword=\"red\"\n")
+	file.close()
+	var store := SettingsStore.new(PATH)
+	assert_eq(store.load_file(), OK, "load")
+	assert_eq(store.get_colour("ok"), 205.0, "known hue kept")
+	assert_eq(store.get_colour("odd"), -1.0, "hue outside the set dropped")
+	assert_eq(store.get_colour("word"), -1.0, "non-number dropped")
+	assert_eq(store.colours().size(), 1, "only one choice")

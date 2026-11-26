@@ -63,12 +63,7 @@ func _replan() -> void:
 		return
 	_update_away()
 	var slots := slot_count()
-	var sessions := Bridge.registry.sessions().map(func(s) -> Dictionary:
-		return {"id": s.id, "name": s.name, "state": s.state, "updated_msec": s.updated_msec,
-			"away": _away.has(s.id)})
-	var shown := _avatars.values().map(func(a) -> Dictionary:
-		return {"id": a.session_id, "slot": a.slot, "hue": a.hue, "leaving": a.is_going()})
-	for act in Cast.plan(sessions, shown, slots):
+	for act in Cast.plan(_cast_sessions(), _cast_avatars(), slots, Settings.colours()):
 		match act.kind:
 			"enter":
 				_spawn(Bridge.registry.get_session(act.id), act.slot, act.hue, slots)
@@ -107,6 +102,17 @@ func _update_away() -> void:
 		elif Cast.comes_back(_away[id], s):
 			_away.erase(id)
 			print("Avatars: %s is back" % s.name)
+
+
+func _cast_sessions() -> Array:
+	return Bridge.registry.sessions().map(func(s) -> Dictionary:
+		return {"id": s.id, "name": s.name, "state": s.state, "updated_msec": s.updated_msec,
+			"away": _away.has(s.id)})
+
+
+func _cast_avatars() -> Array:
+	return _avatars.values().map(func(a) -> Dictionary:
+		return {"id": a.session_id, "slot": a.slot, "hue": a.hue, "leaving": a.is_going()})
 
 
 func _spawn(session: SessionRegistry.Session, slot: int, hue: float, slots: int) -> void:
@@ -222,15 +228,71 @@ func _open_menu(a: Node) -> void:
 	if not is_instance_valid(a) or not NativeMenu.has_feature(NativeMenu.FEATURE_POPUP_MENU):
 		return
 	var menu := build_menu(a)
-	NativeMenu.set_popup_close_callback(menu, func() -> void: NativeMenu.free_menu.call_deferred(menu))
+	NativeMenu.set_popup_close_callback(menu, func() -> void: _free_menu.call_deferred(menu))
 	NativeMenu.popup(menu, DisplayServer.mouse_get_position())
+
+
+## Frees a popup menu and its submenus.
+func _free_menu(menu: RID) -> void:
+	for i in NativeMenu.get_item_count(menu):
+		var sub := NativeMenu.get_item_submenu(menu, i)
+		if sub.is_valid():
+			NativeMenu.free_menu(sub)
+	NativeMenu.free_menu(menu)
 
 
 func build_menu(a: Node) -> RID:
 	var menu := NativeMenu.create_menu()
 	var id: String = a.session_id
+	if not id.begins_with(Cast.OWN_PREFIX):
+		NativeMenu.add_submenu_item(menu, "Colour", _build_colour_menu(a))
 	NativeMenu.add_item(menu, "Send home", func(_tag: Variant) -> void: send_home(id))
 	return menu
+
+
+## The "Colour" submenu (pick-wobbo-colour D5): the 8 hues by name and
+## "Automatic", with a check mark on the folder's choice.
+func _build_colour_menu(a: Node) -> RID:
+	var sub := NativeMenu.create_menu()
+	var id: String = a.session_id
+	var chosen := Settings.get_colour(a.display_name)
+	for i in Cast.HUES.size():
+		var h: float = Cast.HUES[i]
+		var idx := NativeMenu.add_radio_check_item(sub, Cast.HUE_NAMES[i], func(_tag: Variant) -> void: set_colour(id, h))
+		NativeMenu.set_item_checked(sub, idx, h == chosen)
+		NativeMenu.set_item_icon(sub, idx, _swatch(h))
+	NativeMenu.add_separator(sub)
+	var auto := NativeMenu.add_radio_check_item(sub, "Automatic", func(_tag: Variant) -> void: set_colour(id, -1.0))
+	NativeMenu.set_item_checked(sub, auto, chosen < 0.0)
+	return sub
+
+
+## A small dot in the buddy colour for the menu (spike S1).
+func _swatch(hue: float) -> Texture2D:
+	var px := 12
+	var img := Image.create_empty(px, px, false, Image.FORMAT_RGBA8)
+	var c := Color.from_hsv(fposmod(hue, 360.0) / 360.0, 0.6, 0.7)
+	var r := px * 0.5
+	for y in px:
+		for x in px:
+			var d := Vector2(x + 0.5 - r, y + 0.5 - r).length()
+			img.set_pixel(x, y, Color(c, clampf(r - d, 0.0, 1.0)))
+	return ImageTexture.create_from_image(img)
+
+
+## Chooses a colour for the folder of `session_id` (negative: automatic) and
+## recolours the buddies on screen (pick-wobbo-colour D4).
+func set_colour(session_id: String, hue: float) -> void:
+	var s: SessionRegistry.Session = Bridge.registry.get_session(session_id)
+	if s == null or session_id.begins_with(Cast.OWN_PREFIX):
+		return
+	Settings.set_colour(s.name, hue)
+	var live := _cast_sessions().filter(func(x): return x.state != Protocol.STATE_ENDED and not x.away)
+	for change in Cast.recolour(_cast_avatars(), live, s.name, hue, Settings.colours()):
+		var a: SessionAvatar = _avatars.get(change.id)
+		if a:
+			a.set_hue(change.hue)
+			print("Avatars: %s turns hue %.0f" % [a.display_name, change.hue])
 
 
 ## A left click (go-to-session D3, always-go-to-session): bring the app that runs

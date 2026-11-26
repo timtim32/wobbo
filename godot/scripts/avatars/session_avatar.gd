@@ -527,6 +527,14 @@ func balloon_open() -> bool:
 
 ## Shows, places and registers the balloon above the head, or hides it: nothing
 ## to say, carried, walking off, or the buddies hidden.
+## A new colour while on screen (pick-wobbo-colour D4): the body follows on
+## the next frame, the balloon at once.
+func set_hue(p_hue: float) -> void:
+	hue = p_hue
+	if _balloon:
+		_balloon.set_hue(p_hue)
+
+
 func _update_balloon() -> void:
 	var want := not balloon_content.is_empty() and _carry == &"" and not is_going() and not is_climbing() \
 		and Overlay.content_visible and not Overlay.walkway.is_empty()
